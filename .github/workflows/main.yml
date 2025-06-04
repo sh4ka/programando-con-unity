@@ -21,7 +21,7 @@ jobs:
         run: zola build
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v3.1.2
         with:
           name: zola-site
           path: public/
@@ -32,7 +32,7 @@ jobs:
 
     steps:
       - name: Download artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v3.1.2
         with:
           name: zola-site
           path: public/
