@@ -285,7 +285,7 @@ Para dibujar un hexágono plano, necesitamos conocer el **radio** `r` (distancia
 
 Con `r` y `h` podemos calcular los seis vértices en **local‐space**:
 
-```text
+```
 0: ( +r,     0 )         → medio lado derecho
 1: ( +r/2,  +h )         → esquina superior‐derecha
 2: ( -r/2,  +h )         → esquina superior‐izquierda
