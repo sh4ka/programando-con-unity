@@ -15,3 +15,5 @@ jobs:
         env:
           PAGES_BRANCH: gh-pages
           TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Add CNAME manually
+        run: echo 'programandoconunity.es' > static/CNAME
