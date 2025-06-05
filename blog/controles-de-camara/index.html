@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  
+
+  <title></title>
+
+  
+  <link rel="stylesheet" href="https://programandoconunity.es/theme.css">
+  
+  
+</head>
+<body>
+<div class="content">
+  
+  
+  <header>
+    <div class="header-left">
+      <a href="https:&#x2F;&#x2F;programandoconunity.es" class="logo"></a>
+    </div>
+    <div class="header-right">
+      <nav itemscope itemtype="http://schema.org/SiteNavigationElement">
+        <ul>
+          
+          
+          
+          <li class="nav">
+            <a itemprop="url" href="https://programandoconunity.es/blog/">
+              <span itemprop="name">Lista de artículos del blog</span>
+            </a>
+          </li>
+          
+          
+          <li class="nav">
+            <a itemprop="url" href="https://github.com/sh4ka">
+              <img class="icon" src="https:&#x2F;&#x2F;programandoconunity.es/icons/github.svg" alt="Github">
+            </a>
+          </li>
+          
+          
+        </ul>
+      </nav>
+    </div>
+  </header>
+  
+  
+  <main>
+    
+<article itemscope itemtype="http://schema.org/BlogPosting">
+    <div itemprop="headline">
+        <h1>Cómo mover la cámara con WASD y hacer zoom suave con la rueda del ratón en Unity</h1>
+        <div class="border"></div>
+        <time datetime="2025-06-04" class="date" itemprop="datePublished">
+            04 Jun 2025
+        </time>
+    </div>
+    <div itemprop="articleBody">
+        <h1 id="como-mover-la-camara-con-wasd-y-hacer-zoom-suave-con-la-rueda-del-raton-en-unity"><a class="zola-anchor" href="#como-mover-la-camara-con-wasd-y-hacer-zoom-suave-con-la-rueda-del-raton-en-unity" aria-label="Anchor link for: como-mover-la-camara-con-wasd-y-hacer-zoom-suave-con-la-rueda-del-raton-en-unity">Cómo mover la cámara con WASD y hacer zoom suave con la rueda del ratón en Unity</a></h1>
+<blockquote>
+<p>En este mini tutorial aprenderás a mover la cámara en Unity usando las teclas <strong>WASD</strong> y a hacer <strong>zoom con la rueda del ratón</strong> de forma suave y natural, usando el nuevo <strong>Input System</strong> de Unity.</p>
+</blockquote>
+<hr />
+<h2 id="indice"><a class="zola-anchor" href="#indice" aria-label="Anchor link for: indice">Índice</a></h2>
+<ol>
+<li><a href="https://programandoconunity.es/blog/controles-de-camara/#1-preparar-el-proyecto">Preparar el proyecto</a></li>
+<li><a href="https://programandoconunity.es/blog/controles-de-camara/#2-script-cameracontroller">Script CameraController</a></li>
+<li><a href="https://programandoconunity.es/blog/controles-de-camara/#3-asignar-el-script-a-la-camara">Asignar el script a la cámara</a></li>
+<li><a href="https://programandoconunity.es/blog/controles-de-camara/#4-notas-sobre-input-system">Notas sobre Input System</a></li>
+</ol>
+<hr />
+<h2 id="1-preparar-el-proyecto"><a class="zola-anchor" href="#1-preparar-el-proyecto" aria-label="Anchor link for: 1-preparar-el-proyecto">1. Preparar el proyecto</a></h2>
+<ol>
+<li>
+<p>Abre Unity y crea un proyecto nuevo en 2D.</p>
+</li>
+<li>
+<p>Asegúrate de tener instalado el paquete <strong>Input System</strong>:</p>
+<ul>
+<li>Ve a <strong>Window → Package Manager</strong>.</li>
+<li>Busca <strong>Input System</strong> e instálalo si no está.</li>
+</ul>
+</li>
+<li>
+<p>En <strong>Edit → Project Settings → Player → Other Settings</strong>, asegúrate que <strong>Active Input Handling</strong> esté en "Input System Package (New)" o "Both".</p>
+</li>
+</ol>
+<hr />
+<h2 id="2-script-cameracontroller"><a class="zola-anchor" href="#2-script-cameracontroller" aria-label="Anchor link for: 2-script-cameracontroller">2. Script CameraController</a></h2>
+<p>Crea un nuevo script C# llamado <code>CameraController.cs</code> dentro de <code>Assets/Scripts/</code> con el siguiente contenido:</p>
+<pre data-lang="cs" style="background-color:#2b303b;color:#c0c5ce;" class="language-cs "><code class="language-cs" data-lang="cs"><span style="color:#b48ead;">using </span><span>UnityEngine;
+</span><span style="color:#b48ead;">using </span><span>UnityEngine.InputSystem;
+</span><span>
+</span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">CameraController </span><span style="color:#eff1f5;">: </span><span style="color:#a3be8c;">MonoBehaviour
+</span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    [</span><span style="color:#bf616a;">Header</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">Movement Settings</span><span>&quot;</span><span style="color:#eff1f5;">)]
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public float </span><span style="color:#bf616a;">moveSpeed </span><span>= </span><span style="color:#d08770;">5</span><span style="color:#b48ead;">f</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public float </span><span style="color:#bf616a;">acceleration </span><span>= </span><span style="color:#d08770;">10</span><span style="color:#b48ead;">f</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    [</span><span style="color:#bf616a;">Header</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">Zoom Settings</span><span>&quot;</span><span style="color:#eff1f5;">)]
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public float </span><span style="color:#bf616a;">zoomSpeed </span><span>= </span><span style="color:#d08770;">5</span><span style="color:#b48ead;">f</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public float </span><span style="color:#bf616a;">minZoom </span><span>= </span><span style="color:#d08770;">3</span><span style="color:#b48ead;">f</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public float </span><span style="color:#bf616a;">maxZoom </span><span>= </span><span style="color:#d08770;">15</span><span style="color:#b48ead;">f</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">private </span><span style="color:#eff1f5;">Vector3 </span><span style="color:#bf616a;">targetVelocity</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">private </span><span style="color:#eff1f5;">Vector3 </span><span style="color:#bf616a;">currentVelocity</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">private </span><span style="color:#eff1f5;">Camera </span><span style="color:#bf616a;">cam</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">void </span><span style="color:#8fa1b3;">Start</span><span style="color:#eff1f5;">()
+</span><span style="color:#eff1f5;">    {
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">cam </span><span>= </span><span style="color:#bf616a;">Camera</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">main</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">void </span><span style="color:#8fa1b3;">Update</span><span style="color:#eff1f5;">()
+</span><span style="color:#eff1f5;">    {
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">HandleMovement</span><span style="color:#eff1f5;">();
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">HandleZoom</span><span style="color:#eff1f5;">();
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">void </span><span style="color:#8fa1b3;">HandleMovement</span><span style="color:#eff1f5;">()
+</span><span style="color:#eff1f5;">    {
+</span><span style="color:#eff1f5;">        Vector3 </span><span style="color:#bf616a;">inputDirection </span><span>= </span><span style="color:#bf616a;">Vector3</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">zero</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">if </span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">Keyboard</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">current</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">wKey</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">isPressed</span><span style="color:#eff1f5;">) </span><span style="color:#bf616a;">inputDirection </span><span>+= </span><span style="color:#bf616a;">Vector3</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">up</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">if </span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">Keyboard</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">current</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">sKey</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">isPressed</span><span style="color:#eff1f5;">) </span><span style="color:#bf616a;">inputDirection </span><span>+= </span><span style="color:#bf616a;">Vector3</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">down</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">if </span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">Keyboard</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">current</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">aKey</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">isPressed</span><span style="color:#eff1f5;">) </span><span style="color:#bf616a;">inputDirection </span><span>+= </span><span style="color:#bf616a;">Vector3</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">left</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">if </span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">Keyboard</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">current</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">dKey</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">isPressed</span><span style="color:#eff1f5;">) </span><span style="color:#bf616a;">inputDirection </span><span>+= </span><span style="color:#bf616a;">Vector3</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">right</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">targetVelocity </span><span>= </span><span style="color:#bf616a;">inputDirection</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">normalized </span><span>* </span><span style="color:#bf616a;">moveSpeed</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">currentVelocity </span><span>= </span><span style="color:#bf616a;">Vector3</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">Lerp</span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">currentVelocity</span><span style="color:#eff1f5;">, </span><span style="color:#bf616a;">targetVelocity</span><span style="color:#eff1f5;">, </span><span style="color:#bf616a;">acceleration </span><span>* </span><span style="color:#bf616a;">Time</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">deltaTime</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">transform</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">position </span><span>+= </span><span style="color:#bf616a;">currentVelocity </span><span>* </span><span style="color:#bf616a;">Time</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">deltaTime</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">void </span><span style="color:#8fa1b3;">HandleZoom</span><span style="color:#eff1f5;">()
+</span><span style="color:#eff1f5;">    {
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">float </span><span style="color:#bf616a;">scrollInput </span><span>= </span><span style="color:#bf616a;">Mouse</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">current</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">scroll</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">ReadValue</span><span style="color:#eff1f5;">().</span><span style="color:#bf616a;">y</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">float </span><span style="color:#bf616a;">targetSize </span><span>= </span><span style="color:#bf616a;">cam</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">orthographicSize </span><span>- </span><span style="color:#bf616a;">scrollInput </span><span>* </span><span style="color:#bf616a;">zoomSpeed </span><span>* </span><span style="color:#bf616a;">Time</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">deltaTime</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">cam</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">orthographicSize </span><span>= </span><span style="color:#bf616a;">Mathf</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">Lerp</span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">cam</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">orthographicSize</span><span style="color:#eff1f5;">, </span><span style="color:#bf616a;">targetSize</span><span style="color:#eff1f5;">, </span><span style="color:#d08770;">0.1</span><span style="color:#b48ead;">f</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">cam</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">orthographicSize </span><span>= </span><span style="color:#bf616a;">Mathf</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">Clamp</span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">cam</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">orthographicSize</span><span style="color:#eff1f5;">, </span><span style="color:#bf616a;">minZoom</span><span style="color:#eff1f5;">, </span><span style="color:#bf616a;">maxZoom</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<hr />
+<h2 id="3-asignar-el-script-a-la-camara"><a class="zola-anchor" href="#3-asignar-el-script-a-la-camara" aria-label="Anchor link for: 3-asignar-el-script-a-la-camara">3. Asignar el script a la cámara</a></h2>
+<ol>
+<li>
+<p>Selecciona tu <strong>Main Camera</strong> en el panel <code>Hierarchy</code>.</p>
+</li>
+<li>
+<p>Pulsa <strong>Add Component</strong> y selecciona <code>CameraController</code>.</p>
+</li>
+<li>
+<p>Ajusta en el Inspector los parámetros si lo deseas:</p>
+<ul>
+<li><code>Move Speed</code>, <code>Zoom Speed</code>, <code>Min Zoom</code>, <code>Max Zoom</code>, etc.</li>
+</ul>
+</li>
+</ol>
+<hr />
+<h2 id="4-notas-sobre-input-system"><a class="zola-anchor" href="#4-notas-sobre-input-system" aria-label="Anchor link for: 4-notas-sobre-input-system">4. Notas sobre Input System</a></h2>
+<p>Este script está hecho para funcionar con el <strong>nuevo Input System</strong>. Si en tu proyecto tienes errores como:</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>InvalidOperationException: You are trying to read Input using the UnityEngine.Input class, but you have switched active Input handling to Input System package in Player Settings.
+</span></code></pre>
+<p>Debes hacer una de estas dos cosas:</p>
+<ul>
+<li>O bien cambias en <strong>Player Settings</strong> el <code>Active Input Handling</code> a <code>Both</code> o <code>Input System Package (New)</code>.</li>
+<li>O bien adaptas el código para que use <code>Input.GetAxis</code> y <code>Input.mouseScrollDelta</code>, pero perderías la compatibilidad moderna.</li>
+</ul>
+<hr />
+<p>Con eso tendrás una cámara que se mueve de forma natural con WASD y que hace zoom suave con la rueda del ratón. Ideal para juegos de estrategia, city builders o mundos abiertos 2D.</p>
+<p>¡A explorar tu mundo con estilo! 🌍</p>
+
+    </div>
+</article>
+
+  </main>
+  
+  <footer>
+    
+    <div class="border"></div>
+    <div class="footer">
+      <small class="footer-left">
+        Copyright &copy; Jesús Flores
+      </small>
+      <small class="footer-right">
+        Powered by <a href="https://www.getzola.org">Zola</a> | Theme <a href="https://github.com/barlog-m/oceanic-zen">Oceanic Zen</a>
+      </small>
+    </div>
+    
+  </footer>
+  
+</div>
+</body>
+</html>
