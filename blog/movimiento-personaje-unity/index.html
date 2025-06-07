@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  
+
+  <title></title>
+
+  
+  <link rel="stylesheet" href="https://programandoconunity.es/theme.css">
+  
+  
+</head>
+<body>
+<div class="content">
+  
+  
+  <header>
+    <div class="header-left">
+      <a href="https:&#x2F;&#x2F;programandoconunity.es" class="logo"></a>
+    </div>
+    <div class="header-right">
+      <nav itemscope itemtype="http://schema.org/SiteNavigationElement">
+        <ul>
+          
+          
+          
+          <li class="nav">
+            <a itemprop="url" href="https://programandoconunity.es/blog/">
+              <span itemprop="name">Lista de artículos del blog</span>
+            </a>
+          </li>
+          
+          
+          <li class="nav">
+            <a itemprop="url" href="https://github.com/sh4ka">
+              <img class="icon" src="https:&#x2F;&#x2F;programandoconunity.es/icons/github.svg" alt="Github">
+            </a>
+          </li>
+          
+          
+        </ul>
+      </nav>
+    </div>
+  </header>
+  
+  
+  <main>
+    
+<article itemscope itemtype="http://schema.org/BlogPosting">
+    <div itemprop="headline">
+        <h1>Movimiento de personaje sobre hexágonos con seguimiento de cámara inteligente</h1>
+        <div class="border"></div>
+        <time datetime="2025-06-06" class="date" itemprop="datePublished">
+            06 Jun 2025
+        </time>
+    </div>
+    <div itemprop="articleBody">
+        <h1 id="movimiento-de-personaje-sobre-hexagonos-con-seguimiento-de-camara-inteligente"><a class="zola-anchor" href="#movimiento-de-personaje-sobre-hexagonos-con-seguimiento-de-camara-inteligente" aria-label="Anchor link for: movimiento-de-personaje-sobre-hexagonos-con-seguimiento-de-camara-inteligente">Movimiento de personaje sobre hexágonos con seguimiento de cámara inteligente</a></h1>
+<p>En este segundo artículo vamos a ver cómo implementamos el sistema de movimiento para el personaje del jugador dentro de la cuadrícula de hexágonos. También explicamos cómo configuramos una cámara que lo sigue de forma inteligente, y se desacopla automáticamente si el jugador decide moverla manualmente.</p>
+<hr />
+<h2 id="movimiento-entre-hexagonos-adyacentes"><a class="zola-anchor" href="#movimiento-entre-hexagonos-adyacentes" aria-label="Anchor link for: movimiento-entre-hexagonos-adyacentes">Movimiento entre hexágonos adyacentes</a></h2>
+<p>Para que el personaje solo pueda moverse a tiles vecinos, usamos una función que calcula los vecinos adyacentes según el sistema odd-q offset:</p>
+<pre data-lang="cs" style="background-color:#2b303b;color:#c0c5ce;" class="language-cs "><code class="language-cs" data-lang="cs"><span style="color:#b48ead;">public static </span><span>Vector2Int[] </span><span style="color:#8fa1b3;">GetNeighbors</span><span>(Vector2Int </span><span style="color:#bf616a;">coord</span><span>)
+</span><span>{
+</span><span>    </span><span style="color:#b48ead;">int </span><span style="color:#bf616a;">q </span><span>= </span><span style="color:#bf616a;">coord</span><span>.</span><span style="color:#bf616a;">x</span><span>;
+</span><span>    </span><span style="color:#b48ead;">int </span><span style="color:#bf616a;">r </span><span>= </span><span style="color:#bf616a;">coord</span><span>.</span><span style="color:#bf616a;">y</span><span>;
+</span><span>
+</span><span>    Vector2Int[] </span><span style="color:#bf616a;">evenQ </span><span>= { ... };
+</span><span>    Vector2Int[] </span><span style="color:#bf616a;">oddQ </span><span>= { ... };
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">return </span><span>(</span><span style="color:#bf616a;">q </span><span>% </span><span style="color:#d08770;">2 </span><span>== </span><span style="color:#d08770;">0</span><span>) ? </span><span style="color:#bf616a;">evenQ </span><span>: </span><span style="color:#bf616a;">oddQ</span><span>;
+</span><span>}
+</span></code></pre>
+<p>Y en <code>TryMoveTo</code>, verificamos que el destino sea vecino y que el tile sea navegable:</p>
+<pre data-lang="cs" style="background-color:#2b303b;color:#c0c5ce;" class="language-cs "><code class="language-cs" data-lang="cs"><span style="color:#b48ead;">foreach </span><span>(</span><span style="color:#b48ead;">var </span><span style="color:#bf616a;">neighbor </span><span style="color:#b48ead;">in </span><span style="color:#bf616a;">Character</span><span>.</span><span style="color:#bf616a;">GetNeighbors</span><span>(</span><span style="color:#bf616a;">currentCoord</span><span>))
+</span><span>{
+</span><span>    </span><span style="color:#b48ead;">if </span><span>(</span><span style="color:#bf616a;">neighbor </span><span>== </span><span style="color:#bf616a;">targetCoord </span><span>&amp;&amp; </span><span style="color:#bf616a;">HexMapManager</span><span>.</span><span style="color:#bf616a;">Instance</span><span>.</span><span style="color:#bf616a;">IsNavigable</span><span>(</span><span style="color:#bf616a;">targetCoord</span><span>))
+</span><span>    {
+</span><span>        </span><span style="color:#bf616a;">StartCoroutine</span><span>(</span><span style="color:#bf616a;">MoveToHex</span><span>(...));
+</span><span>    }
+</span><span>}
+</span></code></pre>
+<hr />
+<h2 id="movimiento-suave-con-easing"><a class="zola-anchor" href="#movimiento-suave-con-easing" aria-label="Anchor link for: movimiento-suave-con-easing">Movimiento suave con easing</a></h2>
+<p>El desplazamiento del personaje no es instantáneo, sino que se hace con una interpolación suave:</p>
+<pre data-lang="cs" style="background-color:#2b303b;color:#c0c5ce;" class="language-cs "><code class="language-cs" data-lang="cs"><span style="color:#b48ead;">private </span><span>IEnumerator </span><span style="color:#8fa1b3;">MoveToHex</span><span>(Vector3 </span><span style="color:#bf616a;">targetWorldPos</span><span>, Vector2Int </span><span style="color:#bf616a;">targetHex</span><span>)
+</span><span>{
+</span><span>    Vector3 </span><span style="color:#bf616a;">start </span><span>= </span><span style="color:#bf616a;">transform</span><span>.</span><span style="color:#bf616a;">position</span><span>;
+</span><span>    Vector3 </span><span style="color:#bf616a;">end </span><span>= </span><span style="color:#bf616a;">targetWorldPos</span><span>;
+</span><span>
+</span><span>    </span><span style="color:#b48ead;">float </span><span style="color:#bf616a;">elapsed </span><span>= </span><span style="color:#d08770;">0</span><span style="color:#b48ead;">f</span><span>;
+</span><span>    </span><span style="color:#b48ead;">while </span><span>(</span><span style="color:#bf616a;">elapsed </span><span>&lt; </span><span style="color:#bf616a;">moveDuration</span><span>)
+</span><span>    {
+</span><span>        </span><span style="color:#b48ead;">float </span><span style="color:#bf616a;">t </span><span>= </span><span style="color:#bf616a;">elapsed </span><span>/ </span><span style="color:#bf616a;">moveDuration</span><span>;
+</span><span>        </span><span style="color:#b48ead;">float </span><span style="color:#bf616a;">easedT </span><span>= </span><span style="color:#bf616a;">easing</span><span>.</span><span style="color:#bf616a;">Evaluate</span><span>(</span><span style="color:#bf616a;">t</span><span>);
+</span><span>        </span><span style="color:#bf616a;">transform</span><span>.</span><span style="color:#bf616a;">position </span><span>= </span><span style="color:#bf616a;">Vector3</span><span>.</span><span style="color:#bf616a;">Lerp</span><span>(</span><span style="color:#bf616a;">start</span><span>, </span><span style="color:#bf616a;">end</span><span>, </span><span style="color:#bf616a;">easedT</span><span>);
+</span><span>        </span><span style="color:#bf616a;">elapsed </span><span>+= </span><span style="color:#bf616a;">Time</span><span>.</span><span style="color:#bf616a;">deltaTime</span><span>;
+</span><span>        </span><span style="color:#b48ead;">yield return </span><span style="color:#d08770;">null</span><span>;
+</span><span>    }
+</span><span>
+</span><span>    </span><span style="color:#bf616a;">transform</span><span>.</span><span style="color:#bf616a;">position </span><span>= </span><span style="color:#bf616a;">end</span><span>;
+</span><span>    </span><span style="color:#bf616a;">character</span><span>.</span><span style="color:#bf616a;">hexCoordinates </span><span>= </span><span style="color:#bf616a;">targetHex</span><span>;
+</span><span>}
+</span></code></pre>
+<hr />
+<h2 id="camara-inteligente-seguir-o-no-seguir"><a class="zola-anchor" href="#camara-inteligente-seguir-o-no-seguir" aria-label="Anchor link for: camara-inteligente-seguir-o-no-seguir">Cámara inteligente: seguir o no seguir</a></h2>
+<p>La cámara está controlada por un script <code>CameraController</code> que permite:</p>
+<ul>
+<li>Seguir automáticamente al personaje si está en modo seguimiento.</li>
+<li>Desacoplarse si el jugador la mueve con WASD.</li>
+<li>Recentrarla manualmente con barra espaciadora.</li>
+</ul>
+<pre data-lang="cs" style="background-color:#2b303b;color:#c0c5ce;" class="language-cs "><code class="language-cs" data-lang="cs"><span style="color:#b48ead;">if </span><span>(!</span><span style="color:#bf616a;">userOverride </span><span>&amp;&amp; </span><span style="color:#bf616a;">IsPlayerControllingCamera</span><span>())
+</span><span>{
+</span><span>    </span><span style="color:#bf616a;">DisableFollow</span><span>();
+</span><span>}
+</span><span>
+</span><span style="color:#b48ead;">if </span><span>(</span><span style="color:#bf616a;">followEnabled </span><span>&amp;&amp; </span><span style="color:#bf616a;">followTarget </span><span>!= </span><span style="color:#d08770;">null</span><span>)
+</span><span>{
+</span><span>    </span><span style="color:#bf616a;">FollowTarget</span><span>();
+</span><span>}
+</span></code></pre>
+<p>Y cualquier clase puede pedir a la cámara que recentre al objetivo:</p>
+<pre data-lang="cs" style="background-color:#2b303b;color:#c0c5ce;" class="language-cs "><code class="language-cs" data-lang="cs"><span style="color:#bf616a;">camController</span><span>.</span><span style="color:#bf616a;">RecentreOnTarget</span><span>();
+</span></code></pre>
+<hr />
+<h2 id="delegando-responsabilidades"><a class="zola-anchor" href="#delegando-responsabilidades" aria-label="Anchor link for: delegando-responsabilidades">Delegando responsabilidades</a></h2>
+<p>Una parte importante del refactor fue mover toda la lógica de seguimiento y centrado a <code>CameraController</code>. Esto nos permite que <code>PlayerMovement</code> se mantenga simple:</p>
+<pre data-lang="cs" style="background-color:#2b303b;color:#c0c5ce;" class="language-cs "><code class="language-cs" data-lang="cs"><span style="color:#b48ead;">yield return </span><span style="color:#bf616a;">StartCoroutine</span><span>(</span><span style="color:#bf616a;">MoveSmoothlyTo</span><span>(...));
+</span><span style="color:#bf616a;">camController</span><span>.</span><span style="color:#bf616a;">RecentreOnTarget</span><span>();
+</span></code></pre>
+<p>La cámara decide si recentrar, con suavizado o instantáneo, y si reactivar el seguimiento.</p>
+<hr />
+<p>En conjunto con el artículo anterior, esto nos deja con un sistema sólido, elegante y escalable de movimiento y navegación sobre la cuadrícula de hexágonos.</p>
+
+    </div>
+</article>
+
+    
+<div class="border"></div>
+<script src="https://giscus.app/client.js"
+        data-repo="sh4ka/programando-con-unity"
+        data-repo-id="R_kgDOO1aSxA"
+        data-category="General"
+        data-category-id="DIC_kwDOO1aSxM4CrExF"
+        data-mapping="pathname"
+        data-strict="1"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="bottom"
+        data-theme="preferred_color_scheme"
+        data-lang="es"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+</script>
+</main>
+
+  
+  <footer>
+    
+    <div class="border"></div>
+    <div class="footer">
+      <small class="footer-left">
+        Copyright &copy; Jesús Flores
+      </small>
+      <small class="footer-right">
+        Powered by <a href="https://www.getzola.org">Zola</a> | Theme <a href="https://github.com/barlog-m/oceanic-zen">Oceanic Zen</a>
+      </small>
+    </div>
+    
+  </footer>
+  
+</div>
+</body>
+</html>

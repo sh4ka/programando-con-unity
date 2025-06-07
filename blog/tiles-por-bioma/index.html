@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  
+
+  <title></title>
+
+  
+  <link rel="stylesheet" href="https://programandoconunity.es/theme.css">
+  
+  
+</head>
+<body>
+<div class="content">
+  
+  
+  <header>
+    <div class="header-left">
+      <a href="https:&#x2F;&#x2F;programandoconunity.es" class="logo"></a>
+    </div>
+    <div class="header-right">
+      <nav itemscope itemtype="http://schema.org/SiteNavigationElement">
+        <ul>
+          
+          
+          
+          <li class="nav">
+            <a itemprop="url" href="https://programandoconunity.es/blog/">
+              <span itemprop="name">Lista de artículos del blog</span>
+            </a>
+          </li>
+          
+          
+          <li class="nav">
+            <a itemprop="url" href="https://github.com/sh4ka">
+              <img class="icon" src="https:&#x2F;&#x2F;programandoconunity.es/icons/github.svg" alt="Github">
+            </a>
+          </li>
+          
+          
+        </ul>
+      </nav>
+    </div>
+  </header>
+  
+  
+  <main>
+    
+<article itemscope itemtype="http://schema.org/BlogPosting">
+    <div itemprop="headline">
+        <h1>Tiles por bioma</h1>
+        <div class="border"></div>
+        <time datetime="2025-06-04" class="date" itemprop="datePublished">
+            04 Jun 2025
+        </time>
+    </div>
+    <div itemprop="articleBody">
+        <h1 id="como-generar-una-cuadricula-hexagonal-con-tiles-basados-en-bioma"><a class="zola-anchor" href="#como-generar-una-cuadricula-hexagonal-con-tiles-basados-en-bioma" aria-label="Anchor link for: como-generar-una-cuadricula-hexagonal-con-tiles-basados-en-bioma">Cómo generar una cuadrícula hexagonal con tiles basados en bioma</a></h1>
+<p>En este tutorial te enseñaremos cómo crear una cuadrícula de hexágonos en Unity donde cada tile se genera automáticamente en función de tres valores simulados: <strong>altura</strong>, <strong>temperatura</strong> y <strong>humedad</strong>. Utilizaremos una <strong>sprite sheet</strong> y un solo prefab para mantener la eficiencia.</p>
+<hr />
+<h2 id="indice"><a class="zola-anchor" href="#indice" aria-label="Anchor link for: indice">Índice</a></h2>
+<ol>
+<li><a href="https://programandoconunity.es/blog/tiles-por-bioma/#1-preparar-los-assets-y-carpetas">Preparar los assets y carpetas</a></li>
+<li><a href="https://programandoconunity.es/blog/tiles-por-bioma/#2-importar-y-cortar-la-sprite-sheet">Importar y cortar la sprite sheet</a></li>
+<li><a href="https://programandoconunity.es/blog/tiles-por-bioma/#3-crear-el-prefab-base-hextile">Crear el prefab base <code>HexTile</code></a></li>
+<li><a href="https://programandoconunity.es/blog/tiles-por-bioma/#4-asignar-sprites-automaticamente-desde-resources">Asignar sprites automáticamente desde Resources</a></li>
+<li><a href="https://programandoconunity.es/blog/tiles-por-bioma/#5-elegir-el-bioma-segun-ruido-perlin">Elegir el bioma según ruido Perlin</a></li>
+<li><a href="https://programandoconunity.es/blog/tiles-por-bioma/#6-resultado-esperado">Resultado esperado</a></li>
+</ol>
+<hr />
+<h2 id="1-preparar-los-assets-y-carpetas"><a class="zola-anchor" href="#1-preparar-los-assets-y-carpetas" aria-label="Anchor link for: 1-preparar-los-assets-y-carpetas">1. Preparar los assets y carpetas</a></h2>
+<p>Organiza tus carpetas de esta forma:</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>Assets/
+</span><span>├─ Resources/
+</span><span>│  └─ Sprites/
+</span><span>│     └─ HexTilesheet.png
+</span><span>├─ Scripts/
+</span><span>├─ Prefabs/
+</span><span>└─ Scenes/
+</span></code></pre>
+<p>Tu <code>HexTilesheet.png</code> debe contener todos los tiles posibles para los diferentes biomas y variaciones.</p>
+<h2 id="yo-he-usado-la-coleccion-pixel-hex-tileset-y-para-agrupar-las-que-necesitaba-he-usado-texturepacker"><a class="zola-anchor" href="#yo-he-usado-la-coleccion-pixel-hex-tileset-y-para-agrupar-las-que-necesitaba-he-usado-texturepacker" aria-label="Anchor link for: yo-he-usado-la-coleccion-pixel-hex-tileset-y-para-agrupar-las-que-necesitaba-he-usado-texturepacker">Yo he usado la colección <a href="https://zeshio.itch.io/pixel-hex">Pixel Hex Tileset</a> y para agrupar las que necesitaba he usado <a href="https://www.codeandweb.com/texturepacker">TexturePacker</a>.</a></h2>
+<h2 id="2-importar-y-cortar-la-sprite-sheet"><a class="zola-anchor" href="#2-importar-y-cortar-la-sprite-sheet" aria-label="Anchor link for: 2-importar-y-cortar-la-sprite-sheet">2. Importar y cortar la sprite sheet</a></h2>
+<ol>
+<li>
+<p>Selecciona <code>HexTilesheet.png</code> en el panel Project.</p>
+</li>
+<li>
+<p>En el <strong>Inspector</strong>:</p>
+<ul>
+<li><code>Texture Type</code>: <strong>Sprite (2D and UI)</strong></li>
+<li><code>Sprite Mode</code>: <strong>Multiple</strong></li>
+<li><code>Pixels Per Unit</code>: 100</li>
+</ul>
+</li>
+<li>
+<p>Pulsa <strong>Apply</strong>, luego entra en <strong>Sprite Editor</strong>.</p>
+</li>
+<li>
+<p>En Sprite Editor:</p>
+<ul>
+<li><code>Slice → Grid by Cell Size</code></li>
+<li>Tamaño: <code>96 x 96</code> (o el que uses)</li>
+<li>Pulsa <strong>Slice</strong>, luego <strong>Apply</strong></li>
+</ul>
+</li>
+</ol>
+<p>Unity generará automáticamente sub-sprites con nombre <code>HexTilesheet_0</code>, <code>HexTilesheet_1</code>, etc.</p>
+<hr />
+<h2 id="3-crear-el-prefab-base-hextile"><a class="zola-anchor" href="#3-crear-el-prefab-base-hextile" aria-label="Anchor link for: 3-crear-el-prefab-base-hextile">3. Crear el prefab base <code>HexTile</code></a></h2>
+<ol>
+<li>
+<p>En <code>Hierarchy</code>, clic derecho → <strong>Create Empty</strong>, renómbralo a <code>HexTilePrefab</code>.</p>
+</li>
+<li>
+<p>Añade:</p>
+<ul>
+<li><code>SpriteRenderer</code></li>
+<li><code>PolygonCollider2D</code></li>
+</ul>
+</li>
+<li>
+<p>Opcional: agrega el script <code>HexTileInfo.cs</code> para guardar posición <code>q,r</code>.</p>
+</li>
+<li>
+<p>Convierte en prefab arrastrándolo a <code>Assets/Prefabs/</code>.</p>
+</li>
+</ol>
+<hr />
+<h2 id="4-asignar-sprites-automaticamente-desde-resources"><a class="zola-anchor" href="#4-asignar-sprites-automaticamente-desde-resources" aria-label="Anchor link for: 4-asignar-sprites-automaticamente-desde-resources">4. Asignar sprites automáticamente desde Resources</a></h2>
+<p>En tu script <code>HexGridGenerator.cs</code>, cargá los sprites así:</p>
+<pre data-lang="cs" style="background-color:#2b303b;color:#c0c5ce;" class="language-cs "><code class="language-cs" data-lang="cs"><span style="color:#b48ead;">private </span><span>Sprite[] </span><span style="color:#bf616a;">tileSprites</span><span>;
+</span><span>
+</span><span style="color:#b48ead;">void </span><span style="color:#8fa1b3;">Start</span><span>()
+</span><span>{
+</span><span>    </span><span style="color:#bf616a;">tileSprites </span><span>= </span><span style="color:#bf616a;">Resources</span><span>.</span><span style="color:#bf616a;">LoadAll</span><span>&lt;Sprite&gt;(&quot;</span><span style="color:#a3be8c;">Sprites/HexTilesheet</span><span>&quot;);
+</span><span>    </span><span style="color:#bf616a;">GenerateHexGrid</span><span>();
+</span><span>}
+</span></code></pre>
+<blockquote>
+<p>Asegurate de que el sprite sheet esté en <code>Assets/Resources/Sprites/</code></p>
+</blockquote>
+<p>Luego, mapearás cada bioma a una lista de índices:</p>
+<pre data-lang="cs" style="background-color:#2b303b;color:#c0c5ce;" class="language-cs "><code class="language-cs" data-lang="cs"><span style="color:#b48ead;">private </span><span>Dictionary&lt;</span><span style="color:#b48ead;">string</span><span>, </span><span style="color:#b48ead;">int</span><span>[]&gt; </span><span style="color:#bf616a;">biomeSpriteIndices </span><span>= new Dictionary&lt;</span><span style="color:#b48ead;">string</span><span>, </span><span style="color:#b48ead;">int</span><span>[]&gt;
+</span><span>{
+</span><span>    { &quot;</span><span style="color:#a3be8c;">ocean</span><span>&quot;,    new[] { </span><span style="color:#d08770;">0</span><span>, </span><span style="color:#d08770;">1</span><span>, </span><span style="color:#d08770;">2 </span><span>} },
+</span><span>    { &quot;</span><span style="color:#a3be8c;">mountain</span><span>&quot;, new[] { </span><span style="color:#d08770;">3</span><span>, </span><span style="color:#d08770;">4 </span><span>} },
+</span><span>    { &quot;</span><span style="color:#a3be8c;">hill</span><span>&quot;,     new[] { </span><span style="color:#d08770;">5</span><span>, </span><span style="color:#d08770;">6</span><span>, </span><span style="color:#d08770;">7</span><span>, </span><span style="color:#d08770;">8 </span><span>} },
+</span><span>    { &quot;</span><span style="color:#a3be8c;">grass</span><span>&quot;,    new[] { </span><span style="color:#d08770;">9</span><span>, </span><span style="color:#d08770;">10 </span><span>} },
+</span><span>    { &quot;</span><span style="color:#a3be8c;">forest</span><span>&quot;,   new[] { </span><span style="color:#d08770;">11</span><span>, </span><span style="color:#d08770;">12</span><span>, </span><span style="color:#d08770;">13</span><span>, </span><span style="color:#d08770;">14</span><span>, </span><span style="color:#d08770;">15 </span><span>} }
+</span><span>};
+</span></code></pre>
+<hr />
+<h2 id="5-elegir-el-bioma-segun-ruido-perlin"><a class="zola-anchor" href="#5-elegir-el-bioma-segun-ruido-perlin" aria-label="Anchor link for: 5-elegir-el-bioma-segun-ruido-perlin">5. Elegir el bioma según ruido Perlin</a></h2>
+<p>Para cada celda de la cuadrícula:</p>
+<pre data-lang="cs" style="background-color:#2b303b;color:#c0c5ce;" class="language-cs "><code class="language-cs" data-lang="cs"><span style="color:#b48ead;">float </span><span style="color:#bf616a;">height </span><span>= </span><span style="color:#bf616a;">GetPerlin</span><span>(</span><span style="color:#bf616a;">x</span><span>, </span><span style="color:#bf616a;">y</span><span>, </span><span style="color:#bf616a;">heightScale</span><span>, </span><span style="color:#bf616a;">heightOffset</span><span>);
+</span><span style="color:#b48ead;">float </span><span style="color:#bf616a;">temp </span><span>= </span><span style="color:#bf616a;">GetPerlin</span><span>(</span><span style="color:#bf616a;">x</span><span>, </span><span style="color:#bf616a;">y</span><span>, </span><span style="color:#bf616a;">tempScale</span><span>, </span><span style="color:#bf616a;">tempOffset</span><span>);
+</span><span style="color:#b48ead;">float </span><span style="color:#bf616a;">humidity </span><span>= </span><span style="color:#bf616a;">GetPerlin</span><span>(</span><span style="color:#bf616a;">x</span><span>, </span><span style="color:#bf616a;">y</span><span>, </span><span style="color:#bf616a;">humidityScale</span><span>, </span><span style="color:#bf616a;">humidityOffset</span><span>);
+</span><span>
+</span><span style="color:#b48ead;">string </span><span style="color:#bf616a;">biome </span><span>= </span><span style="color:#bf616a;">GetBiome</span><span>(</span><span style="color:#bf616a;">height</span><span>, </span><span style="color:#bf616a;">humidity</span><span>, </span><span style="color:#bf616a;">temp</span><span>);
+</span><span>
+</span><span style="color:#b48ead;">int</span><span>[] </span><span style="color:#bf616a;">indices </span><span>= </span><span style="color:#bf616a;">biomeSpriteIndices</span><span>[</span><span style="color:#bf616a;">biome</span><span>];
+</span><span style="color:#b48ead;">int </span><span style="color:#bf616a;">spriteIndex </span><span>= </span><span style="color:#bf616a;">indices</span><span>[</span><span style="color:#bf616a;">Random</span><span>.</span><span style="color:#bf616a;">Range</span><span>(</span><span style="color:#d08770;">0</span><span>, </span><span style="color:#bf616a;">indices</span><span>.</span><span style="color:#bf616a;">Length</span><span>)];
+</span><span>
+</span><span>GameObject </span><span style="color:#bf616a;">tile </span><span>= </span><span style="color:#bf616a;">Instantiate</span><span>(</span><span style="color:#bf616a;">hexPrefab</span><span>, </span><span style="color:#bf616a;">spawnPos</span><span>, </span><span style="color:#bf616a;">Quaternion</span><span>.</span><span style="color:#bf616a;">identity</span><span>, </span><span style="color:#bf616a;">this</span><span>.</span><span style="color:#bf616a;">transform</span><span>);
+</span><span style="color:#bf616a;">tile</span><span>.</span><span style="color:#bf616a;">GetComponent</span><span>&lt;SpriteRenderer&gt;().</span><span style="color:#bf616a;">sprite </span><span>= </span><span style="color:#bf616a;">tileSprites</span><span>[</span><span style="color:#bf616a;">spriteIndex</span><span>];
+</span></code></pre>
+<p>Y tu función <code>GetBiome</code> podría ser:</p>
+<pre data-lang="cs" style="background-color:#2b303b;color:#c0c5ce;" class="language-cs "><code class="language-cs" data-lang="cs"><span style="color:#b48ead;">string </span><span style="color:#8fa1b3;">GetBiome</span><span>(</span><span style="color:#b48ead;">float </span><span style="color:#bf616a;">height</span><span>, </span><span style="color:#b48ead;">float </span><span style="color:#bf616a;">humidity</span><span>, </span><span style="color:#b48ead;">float </span><span style="color:#bf616a;">temperature</span><span>)
+</span><span>{
+</span><span>    </span><span style="color:#b48ead;">if </span><span>(</span><span style="color:#bf616a;">height </span><span>&lt; </span><span style="color:#d08770;">0.3</span><span style="color:#b48ead;">f</span><span>) </span><span style="color:#b48ead;">return </span><span>&quot;</span><span style="color:#a3be8c;">ocean</span><span>&quot;;
+</span><span>    </span><span style="color:#b48ead;">if </span><span>(</span><span style="color:#bf616a;">height </span><span>&gt; </span><span style="color:#d08770;">0.8</span><span style="color:#b48ead;">f</span><span>) </span><span style="color:#b48ead;">return </span><span>&quot;</span><span style="color:#a3be8c;">mountain</span><span>&quot;;
+</span><span>    </span><span style="color:#b48ead;">if </span><span>(</span><span style="color:#bf616a;">humidity </span><span>&gt; </span><span style="color:#d08770;">0.7</span><span style="color:#b48ead;">f</span><span>) </span><span style="color:#b48ead;">return </span><span>&quot;</span><span style="color:#a3be8c;">forest</span><span>&quot;;
+</span><span>    </span><span style="color:#b48ead;">if </span><span>(</span><span style="color:#bf616a;">humidity </span><span>&gt; </span><span style="color:#d08770;">0.4</span><span style="color:#b48ead;">f</span><span>) </span><span style="color:#b48ead;">return </span><span>&quot;</span><span style="color:#a3be8c;">grass</span><span>&quot;;
+</span><span>    </span><span style="color:#b48ead;">return </span><span>&quot;</span><span style="color:#a3be8c;">hill</span><span>&quot;;
+</span><span>}
+</span></code></pre>
+<hr />
+<h2 id="6-resultado-esperado"><a class="zola-anchor" href="#6-resultado-esperado" aria-label="Anchor link for: 6-resultado-esperado">6. Resultado esperado</a></h2>
+<p>Cuando ejecutes la escena:</p>
+<ul>
+<li>Verás una cuadrícula de hexágonos flat-top</li>
+<li>Cada tile tendrá un sprite diferente según su bioma</li>
+<li>Se usarán variaciones visuales gracias a la sprite sheet</li>
+<li>Todo se hace con <strong>un único prefab</strong> y sin usar múltiples variantes</li>
+</ul>
+<p>Esto te da un sistema eficiente y listo para escalar con nuevas condiciones como estaciones, civilizaciones, estructuras, etc.</p>
+<hr />
+<p>¡Feliz codificación hexagonal! 🚀</p>
+
+    </div>
+</article>
+
+    
+<div class="border"></div>
+<script src="https://giscus.app/client.js"
+        data-repo="sh4ka/programando-con-unity"
+        data-repo-id="R_kgDOO1aSxA"
+        data-category="General"
+        data-category-id="DIC_kwDOO1aSxM4CrExF"
+        data-mapping="pathname"
+        data-strict="1"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="bottom"
+        data-theme="preferred_color_scheme"
+        data-lang="es"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+</script>
+</main>
+
+  
+  <footer>
+    
+    <div class="border"></div>
+    <div class="footer">
+      <small class="footer-left">
+        Copyright &copy; Jesús Flores
+      </small>
+      <small class="footer-right">
+        Powered by <a href="https://www.getzola.org">Zola</a> | Theme <a href="https://github.com/barlog-m/oceanic-zen">Oceanic Zen</a>
+      </small>
+    </div>
+    
+  </footer>
+  
+</div>
+</body>
+</html>
