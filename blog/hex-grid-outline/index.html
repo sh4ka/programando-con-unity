@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  
+
+  <title></title>
+
+  
+  <link rel="stylesheet" href="https://programandoconunity.es/theme.css">
+  
+  
+</head>
+<body>
+<div class="content">
+  
+  
+  <header>
+    <div class="header-left">
+      <a href="https:&#x2F;&#x2F;programandoconunity.es" class="logo"></a>
+    </div>
+    <div class="header-right">
+      <nav itemscope itemtype="http://schema.org/SiteNavigationElement">
+        <ul>
+          
+          
+          
+          <li class="nav">
+            <a itemprop="url" href="https://programandoconunity.es/blog/">
+              <span itemprop="name">Lista de artículos del blog</span>
+            </a>
+          </li>
+          
+          
+          <li class="nav">
+            <a itemprop="url" href="https://github.com/sh4ka">
+              <img class="icon" src="https:&#x2F;&#x2F;programandoconunity.es/icons/github.svg" alt="Github">
+            </a>
+          </li>
+          
+          
+        </ul>
+      </nav>
+    </div>
+  </header>
+  
+  
+  <main>
+    
+<article itemscope itemtype="http://schema.org/BlogPosting">
+    <div itemprop="headline">
+        <h1>Hexágonos Flat-Top en Unity: Crea una Rejilla y Resalta Celdas con LineRenderer</h1>
+        <div class="border"></div>
+        <time datetime="2025-06-03" class="date" itemprop="datePublished">
+            03 Jun 2025
+        </time>
+    </div>
+    <div itemprop="articleBody">
+        <h1 id="como-crear-una-cuadricula-de-hexagonos-flat-top-en-unity-con-un-contorno-procedural-que-siga-el-raton"><a class="zola-anchor" href="#como-crear-una-cuadricula-de-hexagonos-flat-top-en-unity-con-un-contorno-procedural-que-siga-el-raton" aria-label="Anchor link for: como-crear-una-cuadricula-de-hexagonos-flat-top-en-unity-con-un-contorno-procedural-que-siga-el-raton">Cómo crear una cuadrícula de hexágonos “flat‐top” en Unity con un contorno procedural que siga el ratón</a></h1>
+<blockquote>
+<p><strong>¿Te gustaría aprender a generar en Unity una cuadrícula de hexágonos planos (flat‐top) y resaltar el que esté bajo el cursor con un borde dibujado en tiempo real?</strong><br />
+En este artículo paso a paso, en español y con un tono relajado, veremos cómo hacerlo usando un <strong>LineRenderer</strong> en lugar de un sprite para el contorno. Al final tendrás un tablero hexagonal completamente funcional y un highlight (borde) que aparecerá justo donde coloques el ratón.</p>
+</blockquote>
+<hr />
+<h2 id="indice"><a class="zola-anchor" href="#indice" aria-label="Anchor link for: indice">Índice</a></h2>
+<ol>
+<li><a href="https://programandoconunity.es/blog/hex-grid-outline/#introduccion">Introducción</a></li>
+<li><a href="https://programandoconunity.es/blog/hex-grid-outline/#1-crear-un-proyecto-2d-en-unity">1. Crear un proyecto 2D en Unity</a></li>
+<li><a href="https://programandoconunity.es/blog/hex-grid-outline/#2-organizar-carpetas-e-importar-sprites">2. Organizar carpetas e importar sprites</a></li>
+<li><a href="https://programandoconunity.es/blog/hex-grid-outline/#3-crear-el-prefab-hexTile">3. Crear el prefab “HexTile”</a></li>
+<li><a href="https://programandoconunity.es/blog/hex-grid-outline/#4-generar-la-cuadricula-flat-top">4. Generar la cuadrícula flat‐top</a></li>
+<li><a href="https://programandoconunity.es/blog/hex-grid-outline/#5-dibujar-el-contorno-con-linerenderer">5. Dibujar el contorno con LineRenderer</a>
+<ul>
+<li><a href="https://programandoconunity.es/blog/hex-grid-outline/#5-1-el-concepto-del-hex-flat-top">5.1. El concepto del hex flat‐top</a></li>
+<li><a href="https://programandoconunity.es/blog/hex-grid-outline/#5-2-script-hexoutlinecontroller-cs">5.2. Script <code>HexOutlineController</code></a></li>
+<li><a href="https://programandoconunity.es/blog/hex-grid-outline/#5-3-configuracion-del-linerenderer-en-el-prefab">5.3. Configuración del LineRenderer en el prefab</a></li>
+</ul>
+</li>
+<li><a href="https://programandoconunity.es/blog/hex-grid-outline/#6-capturar-el-raton-y-mostrar-ocultar-el-contorno">6. Capturar el ratón y mostrar/ocultar el contorno</a>
+<ul>
+<li><a href="https://programandoconunity.es/blog/hex-grid-outline/#6-1-input-system-vs-input-manager">6.1. Input System vs. Input Manager</a></li>
+<li><a href="https://programandoconunity.es/blog/hex-grid-outline/#6-2-script-mousehighlighter-cs">6.2. Script <code>MouseHighlighter</code></a></li>
+</ul>
+</li>
+<li><a href="https://programandoconunity.es/blog/hex-grid-outline/#7-resultado-final-y-consejos-de-ajuste">7. Resultado final y consejos de ajuste</a></li>
+<li><a href="https://programandoconunity.es/blog/hex-grid-outline/#conclusiones">Conclusiones</a></li>
+</ol>
+<hr />
+<h2 id="introduccion"><a class="zola-anchor" href="#introduccion" aria-label="Anchor link for: introduccion">Introducción</a></h2>
+<p>Las cuadrículas hexagonales son muy populares en juegos de estrategia, rol por turnos o simulación, porque cada celda se conecta con seis vecinas (sin ángulos rectos forzados). En este tutorial veremos:</p>
+<ul>
+<li><strong>Cómo crear un proyecto Unity 2D</strong> desde cero.</li>
+<li><strong>Importar tus sprites de hexágono</strong> (tamaño 96×84 px).</li>
+<li><strong>Generar una cuadrícula flat‐top</strong> (colocación “odd‐q offset”).</li>
+<li><strong>Dibujar un contorno</strong> (outline) usando un <strong>LineRenderer</strong>, sin necesidad de tener un sprite adicional.</li>
+<li><strong>Detectar la posición del ratón</strong> y resaltar en tiempo real el hexágono sobre el que esté el cursor.</li>
+</ul>
+<p>¡Manos a la obra!</p>
+<hr />
+<h2 id="1-crear-un-proyecto-2d-en-unity"><a class="zola-anchor" href="#1-crear-un-proyecto-2d-en-unity" aria-label="Anchor link for: 1-crear-un-proyecto-2d-en-unity">1. Crear un proyecto 2D en Unity</a></h2>
+<ol>
+<li><strong>Abre Unity Hub</strong>.</li>
+<li>Pulsa <strong>New</strong>, elige la plantilla <strong>2D</strong> y ponle de nombre, por ejemplo, <code>HexGridFlatDemo</code>.</li>
+<li>Selecciona la carpeta de destino y pulsa <strong>Create Project</strong>.</li>
+<li>Una vez dentro, asegúrate de que en la ventana <strong>Scene</strong> esté activado el botón <strong>2D</strong> (arriba a la izquierda).</li>
+<li>Guarda la escena actual desde <strong>File → Save As…</strong>, crea la carpeta <code>Assets/Scenes/</code> y nómbrala <code>MainScene.unity</code>.</li>
+</ol>
+<p>¡Listo! Ya tienes un proyecto 2D limpio para empezar.</p>
+<hr />
+<h2 id="2-organizar-carpetas-e-importar-sprites"><a class="zola-anchor" href="#2-organizar-carpetas-e-importar-sprites" aria-label="Anchor link for: 2-organizar-carpetas-e-importar-sprites">2. Organizar carpetas e importar sprites</a></h2>
+<p>Antes de escribir código, es buena idea mantener todo ordenado. En el panel <strong>Project → Assets</strong>, crea estas carpetas:</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>Assets/
+</span><span>├─ Scenes/
+</span><span>├─ Scripts/
+</span><span>├─ Sprites/
+</span><span>├─ Prefabs/
+</span><span>└─ Materials/   (opcional, para el material del contorno)
+</span></code></pre>
+<h3 id="2-1-tus-imagenes-png"><a class="zola-anchor" href="#2-1-tus-imagenes-png" aria-label="Anchor link for: 2-1-tus-imagenes-png">2.1. Tus imágenes PNG</a></h3>
+<p>Vas a necesitar <strong>dos</strong> archivos PNG (96×96 px de canvas, 96×84 px de parte visible):</p>
+<ul>
+<li><strong>HexSprite.png</strong>
+<ul>
+<li>El hexágono relleno (verde, por ejemplo). Bounding = 96×84 px.</li>
+</ul>
+</li>
+<li><strong>HexOutlineSprite.png</strong> (opcional, solo para referencia)
+<ul>
+<li>La misma figura pero dibujada solo con un contorno. En este tutorial no lo usaremos como contorno final, ¡pero sirve para comparar si deseas ver cómo quedaría con sprite!</li>
+</ul>
+</li>
+</ul>
+<p>Arrástralos dentro de <code>Assets/Sprites/</code>.</p>
+<h3 id="2-2-configurar-cada-sprite"><a class="zola-anchor" href="#2-2-configurar-cada-sprite" aria-label="Anchor link for: 2-2-configurar-cada-sprite">2.2. Configurar cada sprite</a></h3>
+<ol>
+<li>
+<p>Selecciona <code>HexSprite.png</code>.</p>
+</li>
+<li>
+<p>En el <strong>Inspector</strong>:</p>
+<ul>
+<li><strong>Texture Type</strong> = <strong>Sprite (2D and UI)</strong></li>
+<li><strong>Sprite Mode</strong> = <strong>Single</strong></li>
+<li><strong>Pixels Per Unit</strong> = <strong>100</strong> (con este valor, 96 px = 0.96 unidades, 84 px = 0.84 unidades).</li>
+<li>Pulsa <strong>Apply</strong>.</li>
+</ul>
+</li>
+<li>
+<p>Repite exactamente lo mismo con <code>HexOutlineSprite.png</code> (aunque luego no lo usaremos como contorno final, te sirve para comparaciones).</p>
+</li>
+</ol>
+<hr />
+<h3 id="compass-warning-importante-sobre-el-pivot"><a class="zola-anchor" href="#compass-warning-importante-sobre-el-pivot" aria-label="Anchor link for: compass-warning-importante-sobre-el-pivot">🧭 ⚠️ Importante sobre el <em>Pivot</em></a></h3>
+<p>Cuando haces <code>Slice</code> de los tiles (por ejemplo 96×96 px), es <strong>fundamental ajustar el Pivot correctamente</strong> para que el centro visual del hexágono se alinee bien con la cuadrícula.<br />
+En muchos sprites el hex está centrado verticalmente en <strong>solo 84 px</strong>, lo que deja un margen de 6 px arriba y abajo.</p>
+<p>🔧 Por eso, el <strong><code>Pivot</code> debe colocarse en coordenadas normalizadas</strong>:</p>
+<ul>
+<li>X = <code>0.5</code> (centro horizontal del tile)</li>
+<li>Y = <code>0.4375</code> (es decir: <code>42 / 96</code>, donde 42 es el centro de la parte útil del hexágono)</li>
+</ul>
+<blockquote>
+<p>💡 Unity usa valores entre <code>0</code> y <code>1</code> para representar el pivot, <strong>no píxeles reales</strong>.<br />
+Si querés posicionar el centro exacto de un gráfico que mide 84 px de alto dentro de un canvas de 96 px, necesitás calcular:<br />
+<code>pivotY = (96 - 84) / 2 + 42 = 42</code> → <code>42 / 96 = 0.4375</code></p>
+</blockquote>
+<ol start="4">
+<li><strong>Comprobar el tamaño en unidades</strong> (opcional):
+<ul>
+<li>Arrastra brevemente <code>HexSprite.png</code> a la <strong>Hierarchy</strong> y renómbralo a “HEX_TMP”.</li>
+<li>Selecciónalo y, en <strong>SpriteRenderer → Bounds → Size</strong>, verás aproximadamente <code>X=0.96  Y=0.84</code>.</li>
+<li>Borra “HEX_TMP” una vez verificado.</li>
+</ul>
+</li>
+</ol>
+<p>Desde ahora, sabemos que:</p>
+<ul>
+<li><strong><code>hexWidth  = 0.96</code> unidades</strong></li>
+<li><strong><code>hexHeight = 0.84</code> unidades</strong></li>
+</ul>
+<p>Estas cifras las usaremos para generar la cuadrícula y dibujar el contorno.</p>
+<hr />
+<h2 id="3-crear-el-prefab-hextile"><a class="zola-anchor" href="#3-crear-el-prefab-hextile" aria-label="Anchor link for: 3-crear-el-prefab-hextile">3. Crear el prefab “HexTile”</a></h2>
+<p>Vamos a crear un prefab que represente cada celda (tile) de la cuadrícula: el sprite + un <strong>PolygonCollider2D</strong> para detectar el ratón.</p>
+<ol>
+<li>
+<p><strong>Crear GameObject base</strong>:</p>
+<ul>
+<li>En <strong>Hierarchy → clic derecho → Create Empty</strong> → renómbralo a <code>HexTilePrefab</code>.</li>
+<li>Ajusta su <strong>Transform.position = (0, 0, 0)</strong>.</li>
+</ul>
+</li>
+<li>
+<p><strong>Añadir SpriteRenderer</strong>:</p>
+<ul>
+<li>Con <code>HexTilePrefab</code> seleccionado, pulsa <strong>Add Component → Sprite Renderer</strong>.</li>
+<li>Arrastra <strong>HexSprite.png</strong> al campo <strong>Sprite</strong>.</li>
+<li>Deja <strong>Sorting Layer / Order in Layer = Default / 0</strong> (o crea un layer “Tiles” si prefieres).</li>
+</ul>
+</li>
+<li>
+<p><strong>Añadir PolygonCollider2D</strong>:</p>
+<ul>
+<li>Con <code>HexTilePrefab</code> activo, pulsa <strong>Add Component → Polygon Collider 2D</strong>.</li>
+<li>Unity automáticamente trazará el polígono en torno a los píxeles no transparentes (96×84 px).</li>
+</ul>
+</li>
+<li>
+<p><strong>(Opcional) Guardar coordenadas con un script</strong>:</p>
+<ul>
+<li>En <code>Assets/Scripts/</code>, crea un nuevo script <strong>C#</strong> llamado <code>HexTileInfo.cs</code>:<pre data-lang="cs" style="background-color:#2b303b;color:#c0c5ce;" class="language-cs "><code class="language-cs" data-lang="cs"><span style="color:#b48ead;">using </span><span>UnityEngine;
+</span><span>
+</span><span style="color:#65737e;">// Guarda las coordenadas q,r (columna, fila) de cada hex
+</span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">HexTileInfo </span><span style="color:#eff1f5;">: </span><span style="color:#a3be8c;">MonoBehaviour
+</span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public int </span><span style="color:#bf616a;">q</span><span style="color:#eff1f5;">; </span><span style="color:#65737e;">// columna (x)
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public int </span><span style="color:#bf616a;">r</span><span style="color:#eff1f5;">; </span><span style="color:#65737e;">// fila   (y)
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+</li>
+<li>Guarda y regresa a Unity.</li>
+<li>Con <code>HexTilePrefab</code> seleccionado, pulsa <strong>Add Component → HexTileInfo</strong> (para poder almacenar la posición de rejilla más adelante).</li>
+</ul>
+</li>
+<li>
+<p><strong>Etiquetar como “HexTile”</strong>:</p>
+<ul>
+<li>Con <code>HexTilePrefab</code> seleccionado, en el Inspector haz clic en <strong>Tag → Add Tag…</strong>.</li>
+<li>Crea la etiqueta <strong>HexTile</strong> y asígnala a <code>HexTilePrefab</code>. Esto permitirá que el script de raycast reconozca cada celda.</li>
+</ul>
+</li>
+<li>
+<p><strong>Convertir en prefab</strong>:</p>
+<ul>
+<li>Arrastra <code>HexTilePrefab</code> desde la <strong>Hierarchy</strong> a <code>Assets/Prefabs/</code>.</li>
+<li>Así se crea <code>HexTile.prefab</code>.</li>
+<li>Borra “HexTilePrefab” de la <strong>Hierarchy</strong> (solo necesitas el asset).</li>
+</ul>
+</li>
+</ol>
+<p>¡Listo! Ya tienes tu prefab de “HexTile” con sprite y collider.</p>
+<hr />
+<h2 id="4-generar-la-cuadricula-flat-top"><a class="zola-anchor" href="#4-generar-la-cuadricula-flat-top" aria-label="Anchor link for: 4-generar-la-cuadricula-flat-top">4. Generar la cuadrícula flat‐top</a></h2>
+<p>Para hexágonos con la parte “plana” arriba y abajo (“flat‐top”), usaremos un <strong>layout odd‐q offset</strong>, donde:</p>
+<ul>
+<li>Cada columna se desplaza verticalmente <strong>media fila</strong> si el índice de columna es impar.</li>
+<li>La distancia horizontal entre centros es <code>hexWidth * 0.75</code>.</li>
+<li>La distancia vertical entre centros es <code>hexHeight</code>.</li>
+</ul>
+<p>Recordemos:</p>
+<ul>
+<li><code>hexWidth  = 0.96f</code></li>
+<li><code>hexHeight = 0.84f</code></li>
+</ul>
+<p>Entonces:</p>
+<ul>
+<li><code>xOffset = hexWidth * 0.75f = 0.96 * 0.75 = 0.72</code></li>
+<li><code>yOffset = hexHeight = 0.84</code></li>
+</ul>
+<h3 id="4-1-script-hexgridgenerator-cs"><a class="zola-anchor" href="#4-1-script-hexgridgenerator-cs" aria-label="Anchor link for: 4-1-script-hexgridgenerator-cs">4.1. Script <code>HexGridGenerator.cs</code></a></h3>
+<p>En <code>Assets/Scripts/</code>, crea <strong>C# Script → HexGridGenerator.cs</strong> con este contenido:</p>
+<pre data-lang="cs" style="background-color:#2b303b;color:#c0c5ce;" class="language-cs "><code class="language-cs" data-lang="cs"><span style="color:#b48ead;">using </span><span>UnityEngine;
+</span><span>
+</span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">HexGridGenerator </span><span style="color:#eff1f5;">: </span><span style="color:#a3be8c;">MonoBehaviour
+</span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    [</span><span style="color:#bf616a;">Header</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">Configuración de la cuadrícula</span><span>&quot;</span><span style="color:#eff1f5;">)]
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public int </span><span style="color:#bf616a;">gridWidth </span><span>= </span><span style="color:#d08770;">10</span><span style="color:#eff1f5;">;       </span><span style="color:#65737e;">// número de columnas
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public int </span><span style="color:#bf616a;">gridHeight </span><span>= </span><span style="color:#d08770;">8</span><span style="color:#eff1f5;">;       </span><span style="color:#65737e;">// número de filas
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public </span><span style="color:#eff1f5;">GameObject </span><span style="color:#bf616a;">hexPrefab</span><span style="color:#eff1f5;">;     </span><span style="color:#65737e;">// arrastra aquí HexTile.prefab
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    [</span><span style="color:#bf616a;">Header</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">Tamaño real del hexágono (unidades)</span><span>&quot;</span><span style="color:#eff1f5;">)]
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public float </span><span style="color:#bf616a;">hexWidth  </span><span>= </span><span style="color:#d08770;">0.96</span><span style="color:#b48ead;">f</span><span style="color:#eff1f5;">;   </span><span style="color:#65737e;">// 96 px ÷ 100 PPU
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public float </span><span style="color:#bf616a;">hexHeight </span><span>= </span><span style="color:#d08770;">0.84</span><span style="color:#b48ead;">f</span><span style="color:#eff1f5;">;   </span><span style="color:#65737e;">// 84 px ÷ 100 PPU
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">void </span><span style="color:#8fa1b3;">Start</span><span style="color:#eff1f5;">()
+</span><span style="color:#eff1f5;">    {
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">GenerateHexGrid</span><span style="color:#eff1f5;">();
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">void </span><span style="color:#8fa1b3;">GenerateHexGrid</span><span style="color:#eff1f5;">()
+</span><span style="color:#eff1f5;">    {
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">if </span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">hexPrefab </span><span>== </span><span style="color:#d08770;">null</span><span style="color:#eff1f5;">)
+</span><span style="color:#eff1f5;">        {
+</span><span style="color:#eff1f5;">            </span><span style="color:#bf616a;">Debug</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">LogError</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">HexGridGenerator: falta asignar hexPrefab.</span><span>&quot;</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">            </span><span style="color:#b48ead;">return</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">        }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">        </span><span style="color:#65737e;">// Cálculo de offsets para flat-top (odd-q layout)
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">float </span><span style="color:#bf616a;">xOffset </span><span>= </span><span style="color:#bf616a;">hexWidth </span><span>* </span><span style="color:#d08770;">0.75</span><span style="color:#b48ead;">f</span><span style="color:#eff1f5;">; </span><span style="color:#65737e;">// 0.72
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">float </span><span style="color:#bf616a;">yOffset </span><span>= </span><span style="color:#bf616a;">hexHeight</span><span style="color:#eff1f5;">;        </span><span style="color:#65737e;">// 0.84
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">for </span><span style="color:#eff1f5;">(</span><span style="color:#b48ead;">int </span><span style="color:#bf616a;">col </span><span>= </span><span style="color:#d08770;">0</span><span style="color:#eff1f5;">; </span><span style="color:#bf616a;">col </span><span>&lt; </span><span style="color:#bf616a;">gridWidth</span><span style="color:#eff1f5;">; </span><span style="color:#bf616a;">col</span><span>++</span><span style="color:#eff1f5;">)
+</span><span style="color:#eff1f5;">        {
+</span><span style="color:#eff1f5;">            </span><span style="color:#b48ead;">for </span><span style="color:#eff1f5;">(</span><span style="color:#b48ead;">int </span><span style="color:#bf616a;">row </span><span>= </span><span style="color:#d08770;">0</span><span style="color:#eff1f5;">; </span><span style="color:#bf616a;">row </span><span>&lt; </span><span style="color:#bf616a;">gridHeight</span><span style="color:#eff1f5;">; </span><span style="color:#bf616a;">row</span><span>++</span><span style="color:#eff1f5;">)
+</span><span style="color:#eff1f5;">            {
+</span><span style="color:#eff1f5;">                </span><span style="color:#65737e;">// Posición horizontal
+</span><span style="color:#eff1f5;">                </span><span style="color:#b48ead;">float </span><span style="color:#bf616a;">xPos </span><span>= </span><span style="color:#bf616a;">col </span><span>* </span><span style="color:#bf616a;">xOffset</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">                </span><span style="color:#65737e;">// Posición vertical base
+</span><span style="color:#eff1f5;">                </span><span style="color:#b48ead;">float </span><span style="color:#bf616a;">yPos </span><span>= </span><span style="color:#bf616a;">row </span><span>* </span><span style="color:#bf616a;">yOffset</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">                </span><span style="color:#65737e;">// Desplazar media fila si la columna es impar
+</span><span style="color:#eff1f5;">                </span><span style="color:#b48ead;">if </span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">col </span><span>% </span><span style="color:#d08770;">2 </span><span>== </span><span style="color:#d08770;">1</span><span style="color:#eff1f5;">)
+</span><span style="color:#eff1f5;">                    </span><span style="color:#bf616a;">yPos </span><span>+= </span><span style="color:#bf616a;">yOffset </span><span>* </span><span style="color:#d08770;">0.5</span><span style="color:#b48ead;">f</span><span style="color:#eff1f5;">; </span><span style="color:#65737e;">// 0.42
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">                Vector3 </span><span style="color:#bf616a;">spawnPos </span><span>= new </span><span style="color:#eff1f5;">Vector3(</span><span style="color:#bf616a;">xPos</span><span style="color:#eff1f5;">, </span><span style="color:#bf616a;">yPos</span><span style="color:#eff1f5;">, </span><span style="color:#d08770;">0</span><span style="color:#b48ead;">f</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">                GameObject </span><span style="color:#bf616a;">hexGO </span><span>= </span><span style="color:#bf616a;">Instantiate</span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">hexPrefab</span><span style="color:#eff1f5;">, </span><span style="color:#bf616a;">spawnPos</span><span style="color:#eff1f5;">, </span><span style="color:#bf616a;">Quaternion</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">identity</span><span style="color:#eff1f5;">, </span><span style="color:#bf616a;">this</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">transform</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">                </span><span style="color:#bf616a;">hexGO</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">name </span><span>= $&quot;</span><span style="color:#a3be8c;">Hex_</span><span style="color:#eff1f5;">{</span><span style="color:#bf616a;">col</span><span style="color:#eff1f5;">}</span><span style="color:#a3be8c;">_</span><span style="color:#eff1f5;">{</span><span style="color:#bf616a;">row</span><span style="color:#eff1f5;">}</span><span>&quot;</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">                </span><span style="color:#65737e;">// Guardar coordenadas si existe HexTileInfo
+</span><span style="color:#eff1f5;">                HexTileInfo </span><span style="color:#bf616a;">info </span><span>= </span><span style="color:#bf616a;">hexGO</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">GetComponent</span><span style="color:#eff1f5;">&lt;HexTileInfo&gt;();
+</span><span style="color:#eff1f5;">                </span><span style="color:#b48ead;">if </span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">info </span><span>!= </span><span style="color:#d08770;">null</span><span style="color:#eff1f5;">)
+</span><span style="color:#eff1f5;">                {
+</span><span style="color:#eff1f5;">                    </span><span style="color:#bf616a;">info</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">q </span><span>= </span><span style="color:#bf616a;">col</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">                    </span><span style="color:#bf616a;">info</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">r </span><span>= </span><span style="color:#bf616a;">row</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">                }
+</span><span style="color:#eff1f5;">            }
+</span><span style="color:#eff1f5;">        }
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<h3 id="4-2-configurar-hexgridmanager"><a class="zola-anchor" href="#4-2-configurar-hexgridmanager" aria-label="Anchor link for: 4-2-configurar-hexgridmanager">4.2. Configurar “HexGridManager”</a></h3>
+<ol>
+<li>
+<p>En <strong>Hierarchy</strong>, clic derecho → <strong>Create Empty</strong>, renómbralo a <code>HexGridManager</code>.</p>
+</li>
+<li>
+<p>Con <code>HexGridManager</code> seleccionado, pulsa <strong>Add Component → HexGridGenerator</strong>.</p>
+</li>
+<li>
+<p>En el Inspector de <code>HexGridGenerator</code>, asigna:</p>
+<ul>
+<li><strong>Grid Width</strong> = 10</li>
+<li><strong>Grid Height</strong> = 8</li>
+<li><strong>Hex Prefab</strong> = <code>Assets/Prefabs/HexTile.prefab</code></li>
+<li><strong>Hex Width</strong> = 0.96</li>
+<li><strong>Hex Height</strong> = 0.84</li>
+</ul>
+</li>
+<li>
+<p>Pulsa <strong>Play</strong>. Verás en la jerarquía un montón de objetos “Hex_0_0”, “Hex_0_1”, …, “Hex_9_7”, y en la <strong>Scene</strong> la cuadrícula empaquetada sin huecos.</p>
+</li>
+</ol>
+<p>¡Bravo! Ya tienes la base de la cuadrícula flat‐top.</p>
+<hr />
+<h2 id="5-dibujar-el-contorno-con-linerenderer"><a class="zola-anchor" href="#5-dibujar-el-contorno-con-linerenderer" aria-label="Anchor link for: 5-dibujar-el-contorno-con-linerenderer">5. Dibujar el contorno con LineRenderer</a></h2>
+<p>En lugar de utilizar un sprite para resaltar el hex seleccionado, vamos a aprovechar el <strong>LineRenderer</strong> para dibujar un polígono de seis lados (hexágono) en tiempo real. Así el contorno será vectorial y escalable.</p>
+<h3 id="5-1-el-concepto-del-hex-flat-top"><a class="zola-anchor" href="#5-1-el-concepto-del-hex-flat-top" aria-label="Anchor link for: 5-1-el-concepto-del-hex-flat-top">5.1. El concepto del hex flat‐top</a></h3>
+<ul>
+<li>Tu sprite mide en unidades reales:
+<ul>
+<li><strong>Ancho total</strong> = <code>hexWidth = 0.96</code></li>
+<li><strong>Alto total</strong> = <code>hexHeight = 0.84</code></li>
+</ul>
+</li>
+</ul>
+<p>Para dibujar un hexágono plano, necesitamos conocer el <strong>radio</strong> <code>r</code> (distancia desde el centro al punto medio de un lado horizontal) y la <strong>altura vertical</strong> <code>h</code> (distancia desde el centro al vértice superior). La fórmula es:</p>
+<ol>
+<li><code>r = hexWidth / 2</code> → <code>0.96 / 2 = 0.48</code> unidades.</li>
+<li><code>h = r * sqrt(3) / 2</code> → <code>0.48 * 0.8660254 ≈ 0.4157</code> unidades.</li>
+</ol>
+<p>Con <code>r</code> y <code>h</code> podemos calcular los seis vértices en <strong>local‐space</strong>:</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>0: ( +r,     0 )         → medio lado derecho
+</span><span>1: ( +r/2,  +h )         → esquina superior‐derecha
+</span><span>2: ( -r/2,  +h )         → esquina superior‐izquierda
+</span><span>3: ( -r,     0 )         → medio lado izquierdo
+</span><span>4: ( -r/2,  -h )         → esquina inferior‐izquierda
+</span><span>5: ( +r/2,  -h )         → esquina inferior‐derecha
+</span><span>6: repetir ( +r, 0 )     → para cerrar el loop
+</span></code></pre>
+<h3 id="5-2-script-hexoutlinecontroller-cs"><a class="zola-anchor" href="#5-2-script-hexoutlinecontroller-cs" aria-label="Anchor link for: 5-2-script-hexoutlinecontroller-cs">5.2. Script <code>HexOutlineController.cs</code></a></h3>
+<p>En <code>Assets/Scripts/</code>, crea un archivo <strong>C#</strong> llamado <code>HexOutlineController.cs</code> y copia el siguiente código:</p>
+<pre data-lang="cs" style="background-color:#2b303b;color:#c0c5ce;" class="language-cs "><code class="language-cs" data-lang="cs"><span style="color:#b48ead;">using </span><span>UnityEngine;
+</span><span>
+</span><span>[</span><span style="color:#bf616a;">RequireComponent</span><span>(typeof(LineRenderer))]
+</span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">HexOutlineController </span><span style="color:#eff1f5;">: </span><span style="color:#a3be8c;">MonoBehaviour
+</span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">private </span><span style="color:#eff1f5;">LineRenderer </span><span style="color:#bf616a;">lr</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    [</span><span style="color:#bf616a;">Header</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">Dimensiones del hexágono</span><span>&quot;</span><span style="color:#eff1f5;">)]
+</span><span style="color:#eff1f5;">    [</span><span style="color:#bf616a;">Tooltip</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">Ancho total del sprite flat-top en unidades (por ejemplo, 0.96)</span><span>&quot;</span><span style="color:#eff1f5;">)]
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public float </span><span style="color:#bf616a;">hexWidth </span><span>= </span><span style="color:#d08770;">0.96</span><span style="color:#b48ead;">f</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    [</span><span style="color:#bf616a;">Tooltip</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">Alto total del sprite flat-top en unidades (por ejemplo, 0.84)</span><span>&quot;</span><span style="color:#eff1f5;">)]
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public float </span><span style="color:#bf616a;">hexHeight </span><span>= </span><span style="color:#d08770;">0.84</span><span style="color:#b48ead;">f</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    [</span><span style="color:#bf616a;">Header</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">Grosor del contorno</span><span>&quot;</span><span style="color:#eff1f5;">)]
+</span><span style="color:#eff1f5;">    [</span><span style="color:#bf616a;">Tooltip</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">Ancho (en unidades) de la línea que dibuja el contorno.</span><span>&quot;</span><span style="color:#eff1f5;">)]
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public float </span><span style="color:#bf616a;">lineWidth </span><span>= </span><span style="color:#d08770;">0.05</span><span style="color:#b48ead;">f</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">void </span><span style="color:#8fa1b3;">Awake</span><span style="color:#eff1f5;">()
+</span><span style="color:#eff1f5;">    {
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">lr </span><span>= </span><span style="color:#bf616a;">GetComponent</span><span style="color:#eff1f5;">&lt;LineRenderer&gt;();
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">        </span><span style="color:#65737e;">// Trabajamos en local space y cerramos el loop
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">lr</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">useWorldSpace </span><span>= </span><span style="color:#d08770;">false</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">lr</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">loop </span><span>= </span><span style="color:#d08770;">true</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">        </span><span style="color:#65737e;">// Definimos grosor constante desde la variable pública
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">lr</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">startWidth </span><span>= </span><span style="color:#bf616a;">lineWidth</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">lr</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">endWidth   </span><span>= </span><span style="color:#bf616a;">lineWidth</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">        </span><span style="color:#65737e;">// Calculamos r y h para el hex flat-top
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">float </span><span style="color:#bf616a;">r </span><span>= </span><span style="color:#bf616a;">hexWidth </span><span>* </span><span style="color:#d08770;">0.5</span><span style="color:#b48ead;">f</span><span style="color:#eff1f5;">;            
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">float </span><span style="color:#bf616a;">h </span><span>= </span><span style="color:#bf616a;">r </span><span>* </span><span style="color:#bf616a;">Mathf</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">Sqrt</span><span style="color:#eff1f5;">(</span><span style="color:#d08770;">3</span><span style="color:#b48ead;">f</span><span style="color:#eff1f5;">) </span><span>/ </span><span style="color:#d08770;">2</span><span style="color:#b48ead;">f</span><span style="color:#eff1f5;">;     
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">        </span><span style="color:#65737e;">// Creamos los 6 vértices + repetir el primero
+</span><span style="color:#eff1f5;">        Vector3[] </span><span style="color:#bf616a;">corners </span><span>= new </span><span style="color:#eff1f5;">Vector3[</span><span style="color:#d08770;">7</span><span style="color:#eff1f5;">];
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">corners</span><span style="color:#eff1f5;">[</span><span style="color:#d08770;">0</span><span style="color:#eff1f5;">] </span><span>= new </span><span style="color:#eff1f5;">Vector3(</span><span>+</span><span style="color:#bf616a;">r</span><span style="color:#eff1f5;">,     </span><span style="color:#d08770;">0</span><span style="color:#b48ead;">f</span><span style="color:#eff1f5;">, </span><span style="color:#d08770;">0</span><span style="color:#b48ead;">f</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">corners</span><span style="color:#eff1f5;">[</span><span style="color:#d08770;">1</span><span style="color:#eff1f5;">] </span><span>= new </span><span style="color:#eff1f5;">Vector3(</span><span>+</span><span style="color:#bf616a;">r</span><span>/</span><span style="color:#d08770;">2</span><span style="color:#b48ead;">f</span><span style="color:#eff1f5;">,  </span><span>+</span><span style="color:#bf616a;">h</span><span style="color:#eff1f5;">, </span><span style="color:#d08770;">0</span><span style="color:#b48ead;">f</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">corners</span><span style="color:#eff1f5;">[</span><span style="color:#d08770;">2</span><span style="color:#eff1f5;">] </span><span>= new </span><span style="color:#eff1f5;">Vector3(</span><span>-</span><span style="color:#bf616a;">r</span><span>/</span><span style="color:#d08770;">2</span><span style="color:#b48ead;">f</span><span style="color:#eff1f5;">,  </span><span>+</span><span style="color:#bf616a;">h</span><span style="color:#eff1f5;">, </span><span style="color:#d08770;">0</span><span style="color:#b48ead;">f</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">corners</span><span style="color:#eff1f5;">[</span><span style="color:#d08770;">3</span><span style="color:#eff1f5;">] </span><span>= new </span><span style="color:#eff1f5;">Vector3(</span><span>-</span><span style="color:#bf616a;">r</span><span style="color:#eff1f5;">,     </span><span style="color:#d08770;">0</span><span style="color:#b48ead;">f</span><span style="color:#eff1f5;">, </span><span style="color:#d08770;">0</span><span style="color:#b48ead;">f</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">corners</span><span style="color:#eff1f5;">[</span><span style="color:#d08770;">4</span><span style="color:#eff1f5;">] </span><span>= new </span><span style="color:#eff1f5;">Vector3(</span><span>-</span><span style="color:#bf616a;">r</span><span>/</span><span style="color:#d08770;">2</span><span style="color:#b48ead;">f</span><span style="color:#eff1f5;">,  </span><span>-</span><span style="color:#bf616a;">h</span><span style="color:#eff1f5;">, </span><span style="color:#d08770;">0</span><span style="color:#b48ead;">f</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">corners</span><span style="color:#eff1f5;">[</span><span style="color:#d08770;">5</span><span style="color:#eff1f5;">] </span><span>= new </span><span style="color:#eff1f5;">Vector3(</span><span>+</span><span style="color:#bf616a;">r</span><span>/</span><span style="color:#d08770;">2</span><span style="color:#b48ead;">f</span><span style="color:#eff1f5;">,  </span><span>-</span><span style="color:#bf616a;">h</span><span style="color:#eff1f5;">, </span><span style="color:#d08770;">0</span><span style="color:#b48ead;">f</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">corners</span><span style="color:#eff1f5;">[</span><span style="color:#d08770;">6</span><span style="color:#eff1f5;">] </span><span>= </span><span style="color:#bf616a;">corners</span><span style="color:#eff1f5;">[</span><span style="color:#d08770;">0</span><span style="color:#eff1f5;">];  </span><span style="color:#65737e;">// cierre del loop
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">lr</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">positionCount </span><span>= </span><span style="color:#bf616a;">corners</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">Length</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">lr</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">SetPositions</span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">corners</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">        </span><span style="color:#65737e;">// Al arrancar, lo ocultamos
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">lr</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">enabled </span><span>= </span><span style="color:#d08770;">false</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#65737e;">/// &lt;</span><span style="color:#bf616a;">summary</span><span style="color:#65737e;">&gt;
+</span><span style="color:#65737e;">    /// Mueve el contorno al centro del hex en worldPos y lo muestra.
+</span><span style="color:#65737e;">    /// &lt;/</span><span style="color:#bf616a;">summary</span><span style="color:#65737e;">&gt;
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public void </span><span style="color:#8fa1b3;">ShowAt</span><span style="color:#eff1f5;">(Vector3 </span><span style="color:#bf616a;">worldPos</span><span style="color:#eff1f5;">)
+</span><span style="color:#eff1f5;">    {
+</span><span style="color:#eff1f5;">        </span><span style="color:#65737e;">// useWorldSpace = false → mover el transform
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">transform</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">position </span><span>= new </span><span style="color:#eff1f5;">Vector3(</span><span style="color:#bf616a;">worldPos</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">x</span><span style="color:#eff1f5;">, </span><span style="color:#bf616a;">worldPos</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">y</span><span style="color:#eff1f5;">, </span><span>-</span><span style="color:#d08770;">0.1</span><span style="color:#b48ead;">f</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">lr</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">enabled </span><span>= </span><span style="color:#d08770;">true</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#65737e;">/// &lt;</span><span style="color:#bf616a;">summary</span><span style="color:#65737e;">&gt;
+</span><span style="color:#65737e;">    /// Oculta el contorno.
+</span><span style="color:#65737e;">    /// &lt;/</span><span style="color:#bf616a;">summary</span><span style="color:#65737e;">&gt;
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public void </span><span style="color:#8fa1b3;">Hide</span><span style="color:#eff1f5;">()
+</span><span style="color:#eff1f5;">    {
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">lr</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">enabled </span><span>= </span><span style="color:#d08770;">false</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<h3 id="5-3-configuracion-del-linerenderer-en-el-prefab"><a class="zola-anchor" href="#5-3-configuracion-del-linerenderer-en-el-prefab" aria-label="Anchor link for: 5-3-configuracion-del-linerenderer-en-el-prefab">5.3. Configuración del LineRenderer en el prefab</a></h3>
+<ol>
+<li>Arrastra el GameObject <strong>HexOutline</strong> (vacío) a la <strong>Hierarchy</strong> y renómbralo a <code>HexOutline</code>.</li>
+<li>Pule <strong>Add Component → Line Renderer</strong>.</li>
+<li>En el Inspector del <strong>Line Renderer</strong>:
+<ul>
+<li><strong>Material</strong>: crea o asigna un <strong>Material</strong> basado en <strong>Sprites/Default</strong> con color a tu gusto (blanco, amarillo…).</li>
+<li><strong>Loop</strong>: ✔ (marcado).</li>
+<li><strong>Use World Space</strong>: ✘ (desmarcado).</li>
+<li><strong>Sorting Layer</strong>: <code>Default</code> (u otro) y <strong>Order in Layer</strong> = <code>1</code>.</li>
+</ul>
+</li>
+<li><strong>Agrega <code>HexOutlineController</code></strong> al mismo GameObject:
+<ul>
+<li>Haz clic en <strong>Add Component → HexOutlineController</strong>.</li>
+<li>En el Inspector podrás editar:
+<ul>
+<li><strong>Hex Width</strong> = <code>0.96</code></li>
+<li><strong>Hex Height</strong> = <code>0.84</code></li>
+<li><strong>Line Width</strong> = <code>0.05</code></li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Convierte <code>HexOutline</code> en prefab: arrástralo desde la <strong>Hierarchy</strong> a <code>Assets/Prefabs/ ⇒ HexOutline.prefab</code>.</li>
+<li>Borra <code>HexOutline</code> de la <strong>Hierarchy</strong>.</li>
+</ol>
+<hr />
+<h2 id="6-capturar-el-raton-y-mostrar-ocultar-el-contorno"><a class="zola-anchor" href="#6-capturar-el-raton-y-mostrar-ocultar-el-contorno" aria-label="Anchor link for: 6-capturar-el-raton-y-mostrar-ocultar-el-contorno">6. Capturar el ratón y mostrar/ocultar el contorno</a></h2>
+<p>Ahora que ya tenemos la cuadrícula y el prefab del contorno, solo falta hacer el raycast cada fotograma y, si el ratón está sobre un hexágono, mover el contorno al centro de ese tile.</p>
+<h3 id="6-1-input-system-vs-input-manager"><a class="zola-anchor" href="#6-1-input-system-vs-input-manager" aria-label="Anchor link for: 6-1-input-system-vs-input-manager">6.1. Input System vs. Input Manager</a></h3>
+<p>Unity ha “evolucionado” su sistema de entrada. Si ves este error al compilar:</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>InvalidOperationException: You are intentando leer Input usando UnityEngine.Input, 
+</span><span>pero tienes activado el Input System Package en Player Settings.
+</span></code></pre>
+<p>tienes dos opciones:</p>
+<ul>
+<li>
+<p><strong>Opción A (rápida)</strong>: volver a la API clásica</p>
+<ul>
+<li><strong>Edit → Project Settings → Player → Other Settings → Active Input Handling</strong> → selecciona <strong>Input Manager (Old)</strong> (o <strong>Both</strong>).</li>
+<li>Así <code>Input.mousePosition</code> vuelve a funcionar sin tocar el script.</li>
+</ul>
+</li>
+<li>
+<p><strong>Opción B (recomendada si quieres usar Input System)</strong>: migrar tu código al nuevo paquete</p>
+<ul>
+<li>Instala el <strong>Input System</strong> desde <strong>Window → Package Manager</strong>.</li>
+<li>Reemplaza <code>Input.mousePosition</code> por <code>Mouse.current.position.ReadValue()</code> y agrega <code>using UnityEngine.InputSystem;</code> al script.</li>
+</ul>
+</li>
+</ul>
+<p>En este tutorial mostraremos la <strong>Opción B</strong>, porque es la recomendación actual de Unity.</p>
+<h3 id="6-2-script-mousehighlighter-cs"><a class="zola-anchor" href="#6-2-script-mousehighlighter-cs" aria-label="Anchor link for: 6-2-script-mousehighlighter-cs">6.2. Script <code>MouseHighlighter.cs</code></a></h3>
+<p>En <code>Assets/Scripts/</code>, crea un archivo <strong>C#</strong> llamado <code>MouseHighlighter.cs</code> y pega este contenido:</p>
+<pre data-lang="cs" style="background-color:#2b303b;color:#c0c5ce;" class="language-cs "><code class="language-cs" data-lang="cs"><span style="color:#b48ead;">using </span><span>UnityEngine;
+</span><span style="color:#65737e;">// Necesario para la nueva Input System:
+</span><span style="color:#b48ead;">using </span><span>UnityEngine.InputSystem;
+</span><span>
+</span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">MouseHighlighter </span><span style="color:#eff1f5;">: </span><span style="color:#a3be8c;">MonoBehaviour
+</span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    [</span><span style="color:#bf616a;">Header</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">Referencias</span><span>&quot;</span><span style="color:#eff1f5;">)]
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public </span><span style="color:#eff1f5;">Camera </span><span style="color:#bf616a;">mainCamera</span><span style="color:#eff1f5;">;          </span><span style="color:#65737e;">// Arrastra tu Main Camera aquí
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public </span><span style="color:#eff1f5;">GameObject </span><span style="color:#bf616a;">outlinePrefab</span><span style="color:#eff1f5;">;   </span><span style="color:#65737e;">// Arrastra aquí HexOutline.prefab
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">private </span><span style="color:#eff1f5;">HexOutlineController </span><span style="color:#bf616a;">outlineController</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">private </span><span style="color:#eff1f5;">GameObject </span><span style="color:#bf616a;">outlineInstance</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">void </span><span style="color:#8fa1b3;">Start</span><span style="color:#eff1f5;">()
+</span><span style="color:#eff1f5;">    {
+</span><span style="color:#eff1f5;">        </span><span style="color:#65737e;">// Si no asignaste la cámara en el Inspector, toma siempre la principal
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">if </span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">mainCamera </span><span>== </span><span style="color:#d08770;">null</span><span style="color:#eff1f5;">)
+</span><span style="color:#eff1f5;">            </span><span style="color:#bf616a;">mainCamera </span><span>= </span><span style="color:#bf616a;">Camera</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">main</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">if </span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">outlinePrefab </span><span>== </span><span style="color:#d08770;">null</span><span style="color:#eff1f5;">)
+</span><span style="color:#eff1f5;">        {
+</span><span style="color:#eff1f5;">            </span><span style="color:#bf616a;">Debug</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">LogError</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">MouseHighlighter: falta asignar outlinePrefab.</span><span>&quot;</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">            </span><span style="color:#b48ead;">return</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">        }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">        </span><span style="color:#65737e;">// Instanciamos el contorno (solo una vez)
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">outlineInstance </span><span>= </span><span style="color:#bf616a;">Instantiate</span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">outlinePrefab</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">outlineController </span><span>= </span><span style="color:#bf616a;">outlineInstance</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">GetComponent</span><span style="color:#eff1f5;">&lt;HexOutlineController&gt;();
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">void </span><span style="color:#8fa1b3;">Update</span><span style="color:#eff1f5;">()
+</span><span style="color:#eff1f5;">    {
+</span><span style="color:#eff1f5;">        </span><span style="color:#65737e;">// 1) Obtener posición del ratón con la nueva Input System
+</span><span style="color:#eff1f5;">        Vector2 </span><span style="color:#bf616a;">mouseScreenPos</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">if </span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">Mouse</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">current </span><span>!= </span><span style="color:#d08770;">null</span><span style="color:#eff1f5;">)
+</span><span style="color:#eff1f5;">        {
+</span><span style="color:#eff1f5;">            </span><span style="color:#bf616a;">mouseScreenPos </span><span>= </span><span style="color:#bf616a;">Mouse</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">current</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">position</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">ReadValue</span><span style="color:#eff1f5;">();
+</span><span style="color:#eff1f5;">        }
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">else
+</span><span style="color:#eff1f5;">        {
+</span><span style="color:#eff1f5;">            </span><span style="color:#65737e;">// No hay ratón disponible (ej. en móviles), salimos
+</span><span style="color:#eff1f5;">            </span><span style="color:#bf616a;">outlineController</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">Hide</span><span style="color:#eff1f5;">();
+</span><span style="color:#eff1f5;">            </span><span style="color:#b48ead;">return</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">        }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">        </span><span style="color:#65737e;">// 2) Convertir de screen (2D) a world (3D)
+</span><span style="color:#eff1f5;">        Vector3 </span><span style="color:#bf616a;">mouseWorld3D </span><span>= </span><span style="color:#bf616a;">mainCamera</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">ScreenToWorldPoint</span><span style="color:#eff1f5;">(
+</span><span style="color:#eff1f5;">            </span><span>new </span><span style="color:#eff1f5;">Vector3(</span><span style="color:#bf616a;">mouseScreenPos</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">x</span><span style="color:#eff1f5;">, </span><span style="color:#bf616a;">mouseScreenPos</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">y</span><span style="color:#eff1f5;">, </span><span style="color:#d08770;">0</span><span style="color:#b48ead;">f</span><span style="color:#eff1f5;">));
+</span><span style="color:#eff1f5;">        Vector2 </span><span style="color:#bf616a;">mouseWorld2D </span><span>= new </span><span style="color:#eff1f5;">Vector2(</span><span style="color:#bf616a;">mouseWorld3D</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">x</span><span style="color:#eff1f5;">, </span><span style="color:#bf616a;">mouseWorld3D</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">y</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">        </span><span style="color:#65737e;">// 3) Raycast 2D puntual en esa posición (Vector2.zero = dirección cero)
+</span><span style="color:#eff1f5;">        RaycastHit2D </span><span style="color:#bf616a;">hit </span><span>= </span><span style="color:#bf616a;">Physics2D</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">Raycast</span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">mouseWorld2D</span><span style="color:#eff1f5;">, </span><span style="color:#bf616a;">Vector2</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">zero</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">if </span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">hit</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">collider </span><span>!= </span><span style="color:#d08770;">null </span><span>&amp;&amp; </span><span style="color:#bf616a;">hit</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">collider</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">CompareTag</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">HexTile</span><span>&quot;</span><span style="color:#eff1f5;">))
+</span><span style="color:#eff1f5;">        {
+</span><span style="color:#eff1f5;">            </span><span style="color:#65737e;">// El ratón está sobre un tile válido
+</span><span style="color:#eff1f5;">            Vector3 </span><span style="color:#bf616a;">hexPos </span><span>= </span><span style="color:#bf616a;">hit</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">collider</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">gameObject</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">transform</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">position</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">            </span><span style="color:#bf616a;">outlineController</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">ShowAt</span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">hexPos</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">        }
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">else
+</span><span style="color:#eff1f5;">        {
+</span><span style="color:#eff1f5;">            </span><span style="color:#65737e;">// Si no está sobre ningún HexTile
+</span><span style="color:#eff1f5;">            </span><span style="color:#bf616a;">outlineController</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">Hide</span><span style="color:#eff1f5;">();
+</span><span style="color:#eff1f5;">        }
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<h3 id="6-3-configurar-mousehighlightermanager"><a class="zola-anchor" href="#6-3-configurar-mousehighlightermanager" aria-label="Anchor link for: 6-3-configurar-mousehighlightermanager">6.3. Configurar <code>MouseHighlighterManager</code></a></h3>
+<ol>
+<li>En la <strong>Hierarchy</strong>, clic derecho → <strong>Create Empty</strong> → renómbralo a <code>MouseHighlighterManager</code>.</li>
+<li>Con él seleccionado, pulsa <strong>Add Component → MouseHighlighter</strong>.</li>
+<li>En el Inspector de <code>MouseHighlighter</code>:
+<ul>
+<li><strong>Main Camera</strong> = arrastra tu cámara principal (“Main Camera”).</li>
+<li><strong>Outline Prefab</strong> = arrastra <code>Assets/Prefabs/HexOutline.prefab</code>.</li>
+</ul>
+</li>
+</ol>
+<p>¡Y eso es todo! Al pulsar <strong>Play</strong>, Unity:</p>
+<ul>
+<li>Instanciará la cuadrícula bajo <code>HexGridManager</code>.</li>
+<li>Instanciará un único <code>HexOutline(Clone)</code> bajo <code>MouseHighlighterManager</code>.</li>
+<li>Cada fotograma hará un Raycast en la posición del ratón; si detecta un <code>HexTile</code>, llamará a <code>ShowAt(...)</code>, que moverá el contorno y lo mostrará; si no, llamará a <code>Hide()</code>, que lo ocultará.</li>
+</ul>
+<hr />
+<h2 id="7-resultado-final-y-consejos-de-ajuste"><a class="zola-anchor" href="#7-resultado-final-y-consejos-de-ajuste" aria-label="Anchor link for: 7-resultado-final-y-consejos-de-ajuste">7. Resultado final y consejos de ajuste</a></h2>
+<ol>
+<li>Pulsa <strong>Play</strong>. En la escena debería verse tu tablero de hexágonos flat‐top:
+<ul>
+<li>Columnas: desplazadas media fila si el índice es impar (odd‐q).</li>
+<li>Filas perfectamente empaquetadas sin huecos.</li>
+</ul>
+</li>
+<li>Mueve el ratón sobre distintos hexágonos:
+<ul>
+<li>Aparecerá un borde blanco/amarillento perfectamente acoplado al hex bajo el cursor, con grosor <code>lineWidth</code> (por defecto 0.05).</li>
+<li>Al salir del tile, el contorno se ocultará.</li>
+</ul>
+</li>
+</ol>
+<blockquote>
+<p><strong>Ajustes que puedes cambiar</strong>:</p>
+<ul>
+<li><strong><code>lineWidth</code></strong> en <code>HexOutlineController</code>: modifica a 0.02 para un borde fino, o 0.1 para algo más grueso.</li>
+<li><strong>Color del contorno</strong>: crea un material diferente (Assets/Materials/ → New Material → Shader “Sprites/Default” → elige color) y asígnalo al LineRenderer.</li>
+<li><strong>Tamaño de la rejilla</strong>: en <code>HexGridGenerator</code>, modifica <code>gridWidth</code> y <code>gridHeight</code> a 20×12 o lo que necesites.</li>
+<li><strong><code>hexWidth</code> / <code>hexHeight</code></strong>: si cambias por otro sprite, actualiza estos valores en el prefab <code>HexOutline</code> y en <code>HexGridGenerator</code>.</li>
+<li><strong>Input System vs. Input Manager</strong>: si tu proyecto no usa el paquete Input System, basta con cambiar a “Input Manager (Old)” en <strong>Project Settings → Player → Other Settings → Active Input Handling</strong>, y luego tu script original que usaba <code>Input.mousePosition</code> funcionará sin problemas.</li>
+</ul>
+</blockquote>
+<h4 id="7-1-ejemplo-final-de-jerarquia-modo-edicion"><a class="zola-anchor" href="#7-1-ejemplo-final-de-jerarquia-modo-edicion" aria-label="Anchor link for: 7-1-ejemplo-final-de-jerarquia-modo-edicion">7.1. Ejemplo final de jerarquía (modo edición)</a></h4>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>MainScene
+</span><span>├─ HexGridManager             (con HexGridGenerator)
+</span><span>├─ MouseHighlighterManager    (con MouseHighlighter)
+</span><span>└─ Main Camera
+</span></code></pre>
+<p>Durante el Play Mode, se añadirán:</p>
+<pre style="background-color:#2b303b;color:#c0c5ce;"><code><span>MainScene (Play Mode)
+</span><span>├─ HexGridManager
+</span><span>│   ├─ Hex_0_0  (Sprite + Collider + HexTileInfo)
+</span><span>│   ├─ Hex_0_1
+</span><span>│   └─ …       (en total gridWidth×gridHeight)
+</span><span>│   └─ Hex_9_7
+</span><span>├─ MouseHighlighterManager
+</span><span>└─ HexOutline  (instanciado, con LineRenderer + HexOutlineController)
+</span><span>└─ Main Camera
+</span></code></pre>
+<hr />
+<h2 id="conclusiones"><a class="zola-anchor" href="#conclusiones" aria-label="Anchor link for: conclusiones">Conclusiones</a></h2>
+<p>¡Y así hemos terminado! 🎉 Ahora sabes:</p>
+<ul>
+<li>Crear un <strong>proyecto Unity 2D</strong> desde cero.</li>
+<li>Importar sprites (96×84 px → 0.96×0.84 unidades) y organizarlos en carpetas.</li>
+<li>Generar una <strong>cuadrícula flat‐top</strong> de hexágonos con <strong>odd‐q offset</strong> usando un script sencillo.</li>
+<li>Crear un contorno <strong>procedural</strong> con <strong>LineRenderer</strong>, calculando vértices con <code>r = hexWidth/2</code> y <code>h = r * √3 / 2</code>.</li>
+<li>Mostrar/ocultar ese contorno en tiempo real según la posición del ratón, usando la <strong>nueva Input System</strong>.</li>
+</ul>
+<p>Con este tutorial tienes una base muy sólida para:</p>
+<ul>
+<li>Hacer clic sobre los hexágonos para selección.</li>
+<li>Implementar pathfinding (A*, Dijkstra, Flood Fill) sobre la rejilla.</li>
+<li>Pintar tiles en diferentes colores (cosecha, terreno, unidades).</li>
+<li>Añadir animaciones a los contornos (por ejemplo, cambiar de color o pulsar).</li>
+</ul>
+<p>¡Anímate a explorar más!<br />
+Si tienes dudas, comentarios o quieres sugerir mejoras, deja un mensaje y seguimos aprendiendo juntos.</p>
+<p>¡Feliz codificación hexagonal! 🚀</p>
+
+    </div>
+</article>
+
+    
+<div class="border"></div>
+<script src="https://giscus.app/client.js"
+        data-repo="sh4ka/programando-con-unity"
+        data-repo-id="R_kgDOO1aSxA"
+        data-category="General"
+        data-category-id="DIC_kwDOO1aSxM4CrExF"
+        data-mapping="pathname"
+        data-strict="1"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="bottom"
+        data-theme="preferred_color_scheme"
+        data-lang="es"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+</script>
+</main>
+
+  
+  <footer>
+    
+    <div class="border"></div>
+    <div class="footer">
+      <small class="footer-left">
+        Copyright &copy; Jesús Flores
+      </small>
+      <small class="footer-right">
+        Powered by <a href="https://www.getzola.org">Zola</a> | Theme <a href="https://github.com/barlog-m/oceanic-zen">Oceanic Zen</a>
+      </small>
+    </div>
+    
+  </footer>
+  
+</div>
+</body>
+</html>

@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  
+
+  <title></title>
+
+  
+  <link rel="stylesheet" href="https://programandoconunity.es/theme.css">
+  
+  
+</head>
+<body>
+<div class="content">
+  
+  
+  <header>
+    <div class="header-left">
+      <a href="https:&#x2F;&#x2F;programandoconunity.es" class="logo"></a>
+    </div>
+    <div class="header-right">
+      <nav itemscope itemtype="http://schema.org/SiteNavigationElement">
+        <ul>
+          
+          
+          
+          <li class="nav">
+            <a itemprop="url" href="https://programandoconunity.es/blog/">
+              <span itemprop="name">Lista de artículos del blog</span>
+            </a>
+          </li>
+          
+          
+          <li class="nav">
+            <a itemprop="url" href="https://github.com/sh4ka">
+              <img class="icon" src="https:&#x2F;&#x2F;programandoconunity.es/icons/github.svg" alt="Github">
+            </a>
+          </li>
+          
+          
+        </ul>
+      </nav>
+    </div>
+  </header>
+  
+  
+  <main>
+    
+<article itemscope itemtype="http://schema.org/BlogPosting">
+    <div itemprop="headline">
+        <h1>Crear un &quot;Monster Manual&quot; en Unity para enemigos tipo RPG</h1>
+        <div class="border"></div>
+        <time datetime="2025-06-09" class="date" itemprop="datePublished">
+            09 Jun 2025
+        </time>
+    </div>
+    <div itemprop="articleBody">
+        <h2 id="crear-un-monster-manual-en-unity-para-enemigos-tipo-rpg"><a class="zola-anchor" href="#crear-un-monster-manual-en-unity-para-enemigos-tipo-rpg" aria-label="Anchor link for: crear-un-monster-manual-en-unity-para-enemigos-tipo-rpg">Crear un "Monster Manual" en Unity para enemigos tipo RPG</a></h2>
+<p>En este artículo veremos cómo estructurar un sistema de enemigos en Unity inspirado en los juegos de rol clásicos. El objetivo es tener una forma sencilla y organizada de definir criaturas con estadísticas personalizadas, sin repetir código ni depender de configuraciones engorrosas en el editor.</p>
+<h3 id="sparkles-enfoque-general"><a class="zola-anchor" href="#sparkles-enfoque-general" aria-label="Anchor link for: sparkles-enfoque-general">✨ Enfoque general</a></h3>
+<p>Partimos de una arquitectura basada en estas piezas:</p>
+<ul>
+<li><strong><code>CharacterSheet</code></strong>: la hoja de personaje que contiene atributos como fuerza, constitución, inteligencia, etc.</li>
+<li><strong><code>CharacterSheetTemplate</code></strong>: una plantilla reutilizable que define los valores base para crear hojas.</li>
+<li><strong><code>MonsterType</code></strong>: un <code>enum</code> con los nombres de enemigos posibles.</li>
+<li><strong><code>MonsterManual0</code></strong>: una clase estática que actúa como "bestia digital", conteniendo una tabla de templates listos para usar.</li>
+</ul>
+<p>Esto nos permite, por ejemplo, instanciar un orco con:</p>
+<pre data-lang="cs" style="background-color:#2b303b;color:#c0c5ce;" class="language-cs "><code class="language-cs" data-lang="cs"><span style="color:#b48ead;">var </span><span style="color:#bf616a;">orcSheet </span><span>= </span><span style="color:#bf616a;">MonsterManual0</span><span>.</span><span style="color:#bf616a;">GetTemplate</span><span>(</span><span style="color:#bf616a;">MonsterType</span><span>.</span><span style="color:#bf616a;">Orc</span><span>).</span><span style="color:#bf616a;">CreateSheet</span><span>();
+</span></code></pre>
+<hr />
+<h3 id="ledger-clase-charactersheet"><a class="zola-anchor" href="#ledger-clase-charactersheet" aria-label="Anchor link for: ledger-clase-charactersheet">📒 Clase <code>CharacterSheet</code></a></h3>
+<p>Contiene todos los atributos de combate:</p>
+<pre data-lang="cs" style="background-color:#2b303b;color:#c0c5ce;" class="language-cs "><code class="language-cs" data-lang="cs"><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">CharacterSheet
+</span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public int </span><span style="color:#bf616a;">maxHp</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public int </span><span style="color:#bf616a;">currentHp</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public int </span><span style="color:#bf616a;">strength</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public int </span><span style="color:#bf616a;">dexterity</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public int </span><span style="color:#bf616a;">constitution</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public int </span><span style="color:#bf616a;">intelligence</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public int </span><span style="color:#bf616a;">wisdom</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public int </span><span style="color:#bf616a;">charisma</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public int </span><span style="color:#bf616a;">armorClass</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public </span><span style="color:#8fa1b3;">CharacterSheet</span><span style="color:#eff1f5;">(CharacterSheetTemplate </span><span style="color:#bf616a;">template</span><span style="color:#eff1f5;">)
+</span><span style="color:#eff1f5;">    {
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">strength     </span><span>= </span><span style="color:#bf616a;">template</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">strength</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">dexterity    </span><span>= </span><span style="color:#bf616a;">template</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">dexterity</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">constitution </span><span>= </span><span style="color:#bf616a;">template</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">constitution</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">intelligence </span><span>= </span><span style="color:#bf616a;">template</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">intelligence</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">wisdom       </span><span>= </span><span style="color:#bf616a;">template</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">wisdom</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">charisma     </span><span>= </span><span style="color:#bf616a;">template</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">charisma</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">armorClass   </span><span>= </span><span style="color:#bf616a;">template</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">armorClass</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">maxHp        </span><span>= </span><span style="color:#bf616a;">template</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">maxHp</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">currentHp    </span><span>= </span><span style="color:#bf616a;">maxHp</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public static int </span><span style="color:#8fa1b3;">GetModifier</span><span style="color:#eff1f5;">(</span><span style="color:#b48ead;">int </span><span style="color:#bf616a;">stat</span><span style="color:#eff1f5;">) </span><span style="color:#b48ead;">=&gt; </span><span style="color:#bf616a;">Mathf</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">FloorToInt</span><span style="color:#eff1f5;">((</span><span style="color:#bf616a;">stat </span><span>- </span><span style="color:#d08770;">10</span><span style="color:#eff1f5;">) </span><span>/ </span><span style="color:#d08770;">2</span><span style="color:#b48ead;">f</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public int </span><span style="color:#bf616a;">StrengthMod     </span><span style="color:#b48ead;">=&gt; </span><span style="color:#bf616a;">GetModifier</span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">strength</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public int </span><span style="color:#bf616a;">DexterityMod    </span><span style="color:#b48ead;">=&gt; </span><span style="color:#bf616a;">GetModifier</span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">dexterity</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public int </span><span style="color:#bf616a;">ConstitutionMod </span><span style="color:#b48ead;">=&gt; </span><span style="color:#bf616a;">GetModifier</span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">constitution</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public int </span><span style="color:#bf616a;">IntelligenceMod </span><span style="color:#b48ead;">=&gt; </span><span style="color:#bf616a;">GetModifier</span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">intelligence</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public int </span><span style="color:#bf616a;">WisdomMod       </span><span style="color:#b48ead;">=&gt; </span><span style="color:#bf616a;">GetModifier</span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">wisdom</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public int </span><span style="color:#bf616a;">CharismaMod     </span><span style="color:#b48ead;">=&gt; </span><span style="color:#bf616a;">GetModifier</span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">charisma</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<hr />
+<h3 id="file-folder-clase-charactersheettemplate"><a class="zola-anchor" href="#file-folder-clase-charactersheettemplate" aria-label="Anchor link for: file-folder-clase-charactersheettemplate">📁 Clase <code>CharacterSheetTemplate</code></a></h3>
+<p>Es una estructura serializable que define los valores base:</p>
+<pre data-lang="cs" style="background-color:#2b303b;color:#c0c5ce;" class="language-cs "><code class="language-cs" data-lang="cs"><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">CharacterSheetTemplate
+</span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public int </span><span style="color:#bf616a;">strength</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public int </span><span style="color:#bf616a;">dexterity</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public int </span><span style="color:#bf616a;">constitution</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public int </span><span style="color:#bf616a;">intelligence</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public int </span><span style="color:#bf616a;">wisdom</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public int </span><span style="color:#bf616a;">charisma</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public int </span><span style="color:#bf616a;">armorClass</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public int </span><span style="color:#bf616a;">maxHp</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public </span><span style="color:#eff1f5;">CharacterSheet </span><span style="color:#8fa1b3;">CreateSheet</span><span style="color:#eff1f5;">()
+</span><span style="color:#eff1f5;">    {
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">return </span><span>new </span><span style="color:#eff1f5;">CharacterSheet(</span><span style="color:#bf616a;">this</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<hr />
+<h3 id="chess-pawn-enum-monstertype"><a class="zola-anchor" href="#chess-pawn-enum-monstertype" aria-label="Anchor link for: chess-pawn-enum-monstertype">♟ Enum <code>MonsterType</code></a></h3>
+<p>Define los nombres de enemigos que usaremos como clave:</p>
+<pre data-lang="cs" style="background-color:#2b303b;color:#c0c5ce;" class="language-cs "><code class="language-cs" data-lang="cs"><span style="color:#b48ead;">public enum </span><span>MonsterType
+</span><span>{
+</span><span>    </span><span style="color:#d08770;">Goblin</span><span>,
+</span><span>    </span><span style="color:#d08770;">Orc</span><span>,
+</span><span>    </span><span style="color:#d08770;">Skeleton</span><span>,
+</span><span>    </span><span style="color:#d08770;">Troll
+</span><span>    </span><span style="color:#65737e;">// Puedes agregar más tipos aquí
+</span><span>}
+</span></code></pre>
+<hr />
+<h3 id="space-invader-clase-monstermanual0"><a class="zola-anchor" href="#space-invader-clase-monstermanual0" aria-label="Anchor link for: space-invader-clase-monstermanual0">👾 Clase <code>MonsterManual0</code></a></h3>
+<p>Una clase estática con un diccionario de templates listos:</p>
+<pre data-lang="cs" style="background-color:#2b303b;color:#c0c5ce;" class="language-cs "><code class="language-cs" data-lang="cs"><span style="color:#b48ead;">public static class </span><span style="color:#ebcb8b;">MonsterManual0
+</span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">private static </span><span style="color:#eff1f5;">Dictionary&lt;MonsterType, CharacterSheetTemplate&gt; </span><span style="color:#bf616a;">_templates</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">static </span><span style="color:#8fa1b3;">MonsterManual0</span><span style="color:#eff1f5;">()
+</span><span style="color:#eff1f5;">    {
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">_templates </span><span>= new </span><span style="color:#eff1f5;">Dictionary&lt;MonsterType, CharacterSheetTemplate&gt;
+</span><span style="color:#eff1f5;">        {
+</span><span style="color:#eff1f5;">            {
+</span><span style="color:#eff1f5;">                </span><span style="color:#bf616a;">MonsterType</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">Goblin</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">                </span><span>new </span><span style="color:#eff1f5;">CharacterSheetTemplate
+</span><span style="color:#eff1f5;">                {
+</span><span style="color:#eff1f5;">                    </span><span style="color:#bf616a;">strength </span><span>= </span><span style="color:#d08770;">8</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">                    </span><span style="color:#bf616a;">dexterity </span><span>= </span><span style="color:#d08770;">14</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">                    </span><span style="color:#bf616a;">constitution </span><span>= </span><span style="color:#d08770;">10</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">                    </span><span style="color:#bf616a;">intelligence </span><span>= </span><span style="color:#d08770;">8</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">                    </span><span style="color:#bf616a;">wisdom </span><span>= </span><span style="color:#d08770;">8</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">                    </span><span style="color:#bf616a;">charisma </span><span>= </span><span style="color:#d08770;">6</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">                    </span><span style="color:#bf616a;">armorClass </span><span>= </span><span style="color:#d08770;">13</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">                    </span><span style="color:#bf616a;">maxHp </span><span>= </span><span style="color:#d08770;">10
+</span><span style="color:#eff1f5;">                }
+</span><span style="color:#eff1f5;">            },
+</span><span style="color:#eff1f5;">            {
+</span><span style="color:#eff1f5;">                </span><span style="color:#bf616a;">MonsterType</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">Orc</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">                </span><span>new </span><span style="color:#eff1f5;">CharacterSheetTemplate
+</span><span style="color:#eff1f5;">                {
+</span><span style="color:#eff1f5;">                    </span><span style="color:#bf616a;">strength </span><span>= </span><span style="color:#d08770;">16</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">                    </span><span style="color:#bf616a;">dexterity </span><span>= </span><span style="color:#d08770;">12</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">                    </span><span style="color:#bf616a;">constitution </span><span>= </span><span style="color:#d08770;">14</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">                    </span><span style="color:#bf616a;">intelligence </span><span>= </span><span style="color:#d08770;">7</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">                    </span><span style="color:#bf616a;">wisdom </span><span>= </span><span style="color:#d08770;">10</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">                    </span><span style="color:#bf616a;">charisma </span><span>= </span><span style="color:#d08770;">8</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">                    </span><span style="color:#bf616a;">armorClass </span><span>= </span><span style="color:#d08770;">13</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">                    </span><span style="color:#bf616a;">maxHp </span><span>= </span><span style="color:#d08770;">20
+</span><span style="color:#eff1f5;">                }
+</span><span style="color:#eff1f5;">            },
+</span><span style="color:#eff1f5;">            {
+</span><span style="color:#eff1f5;">                </span><span style="color:#bf616a;">MonsterType</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">Skeleton</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">                </span><span>new </span><span style="color:#eff1f5;">CharacterSheetTemplate
+</span><span style="color:#eff1f5;">                {
+</span><span style="color:#eff1f5;">                    </span><span style="color:#bf616a;">strength </span><span>= </span><span style="color:#d08770;">10</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">                    </span><span style="color:#bf616a;">dexterity </span><span>= </span><span style="color:#d08770;">14</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">                    </span><span style="color:#bf616a;">constitution </span><span>= </span><span style="color:#d08770;">10</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">                    </span><span style="color:#bf616a;">intelligence </span><span>= </span><span style="color:#d08770;">6</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">                    </span><span style="color:#bf616a;">wisdom </span><span>= </span><span style="color:#d08770;">8</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">                    </span><span style="color:#bf616a;">charisma </span><span>= </span><span style="color:#d08770;">5</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">                    </span><span style="color:#bf616a;">armorClass </span><span>= </span><span style="color:#d08770;">13</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">                    </span><span style="color:#bf616a;">maxHp </span><span>= </span><span style="color:#d08770;">13
+</span><span style="color:#eff1f5;">                }
+</span><span style="color:#eff1f5;">            },
+</span><span style="color:#eff1f5;">            {
+</span><span style="color:#eff1f5;">                </span><span style="color:#bf616a;">MonsterType</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">Troll</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">                </span><span>new </span><span style="color:#eff1f5;">CharacterSheetTemplate
+</span><span style="color:#eff1f5;">                {
+</span><span style="color:#eff1f5;">                    </span><span style="color:#bf616a;">strength </span><span>= </span><span style="color:#d08770;">18</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">                    </span><span style="color:#bf616a;">dexterity </span><span>= </span><span style="color:#d08770;">10</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">                    </span><span style="color:#bf616a;">constitution </span><span>= </span><span style="color:#d08770;">16</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">                    </span><span style="color:#bf616a;">intelligence </span><span>= </span><span style="color:#d08770;">5</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">                    </span><span style="color:#bf616a;">wisdom </span><span>= </span><span style="color:#d08770;">9</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">                    </span><span style="color:#bf616a;">charisma </span><span>= </span><span style="color:#d08770;">5</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">                    </span><span style="color:#bf616a;">armorClass </span><span>= </span><span style="color:#d08770;">15</span><span style="color:#eff1f5;">,
+</span><span style="color:#eff1f5;">                    </span><span style="color:#bf616a;">maxHp </span><span>= </span><span style="color:#d08770;">40
+</span><span style="color:#eff1f5;">                }
+</span><span style="color:#eff1f5;">            }
+</span><span style="color:#eff1f5;">        };
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public static </span><span style="color:#eff1f5;">CharacterSheetTemplate </span><span style="color:#8fa1b3;">GetTemplate</span><span style="color:#eff1f5;">(MonsterType </span><span style="color:#bf616a;">type</span><span style="color:#eff1f5;">)
+</span><span style="color:#eff1f5;">    {
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">if </span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">_templates</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">TryGetValue</span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">type</span><span style="color:#eff1f5;">, </span><span style="color:#b48ead;">out var </span><span style="color:#bf616a;">template</span><span style="color:#eff1f5;">))
+</span><span style="color:#eff1f5;">            </span><span style="color:#b48ead;">return </span><span style="color:#bf616a;">template</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">Debug</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">LogError</span><span style="color:#eff1f5;">(</span><span>$&quot;</span><span style="color:#a3be8c;">No se encontró el template para el tipo </span><span style="color:#eff1f5;">{</span><span style="color:#bf616a;">type</span><span style="color:#eff1f5;">}</span><span>&quot;</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">return </span><span style="color:#d08770;">null</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<hr />
+<h3 id="white-check-mark-ventajas-del-enfoque"><a class="zola-anchor" href="#white-check-mark-ventajas-del-enfoque" aria-label="Anchor link for: white-check-mark-ventajas-del-enfoque">✅ Ventajas del enfoque</a></h3>
+<ul>
+<li>✔️ Modular: podés cargar datos desde archivos JSON o ScriptableObjects en el futuro</li>
+<li>✔️ Reutilizable: un solo template para muchas instancias de enemigos</li>
+<li>✔️ Escalable: fácil de extender con habilidades, loot, inteligencia, etc.</li>
+</ul>
+<p>Este sistema sienta la base para integrar enemigos al sistema de combate, IA, o eventos de exploración. En el futuro podrías combinarlo con un generador de encuentros aleatorios o un editor visual para tus monstruos.</p>
+<p>¡Nos vemos en el próximo artículo!</p>
+
+    </div>
+</article>
+
+    
+<div class="border"></div>
+<script src="https://giscus.app/client.js"
+        data-repo="sh4ka/programando-con-unity"
+        data-repo-id="R_kgDOO1aSxA"
+        data-category="General"
+        data-category-id="DIC_kwDOO1aSxM4CrExF"
+        data-mapping="pathname"
+        data-strict="1"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="bottom"
+        data-theme="preferred_color_scheme"
+        data-lang="es"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+</script>
+</main>
+
+  
+  <footer>
+    
+    <div class="border"></div>
+    <div class="footer">
+      <small class="footer-left">
+        Copyright &copy; Jesús Flores
+      </small>
+      <small class="footer-right">
+        Powered by <a href="https://www.getzola.org">Zola</a> | Theme <a href="https://github.com/barlog-m/oceanic-zen">Oceanic Zen</a>
+      </small>
+    </div>
+    
+  </footer>
+  
+</div>
+</body>
+</html>

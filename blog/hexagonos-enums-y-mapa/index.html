@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  
+
+  <title></title>
+
+  
+  <link rel="stylesheet" href="https://programandoconunity.es/theme.css">
+  
+  
+</head>
+<body>
+<div class="content">
+  
+  
+  <header>
+    <div class="header-left">
+      <a href="https:&#x2F;&#x2F;programandoconunity.es" class="logo"></a>
+    </div>
+    <div class="header-right">
+      <nav itemscope itemtype="http://schema.org/SiteNavigationElement">
+        <ul>
+          
+          
+          
+          <li class="nav">
+            <a itemprop="url" href="https://programandoconunity.es/blog/">
+              <span itemprop="name">Lista de artículos del blog</span>
+            </a>
+          </li>
+          
+          
+          <li class="nav">
+            <a itemprop="url" href="https://github.com/sh4ka">
+              <img class="icon" src="https:&#x2F;&#x2F;programandoconunity.es/icons/github.svg" alt="Github">
+            </a>
+          </li>
+          
+          
+        </ul>
+      </nav>
+    </div>
+  </header>
+  
+  
+  <main>
+    
+<article itemscope itemtype="http://schema.org/BlogPosting">
+    <div itemprop="headline">
+        <h1>Refactorizando la información de los hexágonos: tipos, enum y mapa centralizado</h1>
+        <div class="border"></div>
+        <time datetime="2025-06-06" class="date" itemprop="datePublished">
+            06 Jun 2025
+        </time>
+    </div>
+    <div itemprop="articleBody">
+        <h1 id="refactorizando-la-informacion-de-los-hexagonos-tipos-enum-y-mapa-centralizado"><a class="zola-anchor" href="#refactorizando-la-informacion-de-los-hexagonos-tipos-enum-y-mapa-centralizado" aria-label="Anchor link for: refactorizando-la-informacion-de-los-hexagonos-tipos-enum-y-mapa-centralizado">Refactorizando la información de los hexágonos: tipos, enum y mapa centralizado</a></h1>
+<p>En este artículo vamos a revisar cómo hemos mejorado la forma en la que manejamos los datos de cada hexágono en nuestra cuadrícula flat-top. Pasamos de usar strings para identificar el tipo de terreno a una estructura más robusta con enums, y creamos un sistema centralizado para acceder a la información de cualquier tile desde cualquier parte del juego.</p>
+<h2 id="por-que-evitar-strings-para-los-tipos-de-terreno"><a class="zola-anchor" href="#por-que-evitar-strings-para-los-tipos-de-terreno" aria-label="Anchor link for: por-que-evitar-strings-para-los-tipos-de-terreno">¿Por qué evitar strings para los tipos de terreno?</a></h2>
+<p>Inicialmente teníamos algo como esto en <code>HexTileInfo</code>:</p>
+<pre data-lang="cs" style="background-color:#2b303b;color:#c0c5ce;" class="language-cs "><code class="language-cs" data-lang="cs"><span style="color:#b48ead;">public string </span><span style="color:#bf616a;">tileType</span><span>; </span><span style="color:#65737e;">// Ej: &quot;ocean&quot;, &quot;grass&quot;, &quot;forest&quot;
+</span></code></pre>
+<p>Esto funcionaba, pero tenía varios problemas:</p>
+<ul>
+<li>Mayor propensión a errores tipográficos.</li>
+<li>Comparaciones de strings menos eficientes.</li>
+<li>No hay ayuda de autocompletado en el editor.</li>
+</ul>
+<p>La solución fue introducir un <code>enum</code> llamado <code>TileType</code>:</p>
+<pre data-lang="cs" style="background-color:#2b303b;color:#c0c5ce;" class="language-cs "><code class="language-cs" data-lang="cs"><span style="color:#b48ead;">public enum </span><span>TileType
+</span><span>{
+</span><span>    </span><span style="color:#d08770;">Grass</span><span>,
+</span><span>    </span><span style="color:#d08770;">Forest</span><span>,
+</span><span>    </span><span style="color:#d08770;">Hill</span><span>,
+</span><span>    </span><span style="color:#d08770;">Mountain</span><span>,
+</span><span>    </span><span style="color:#d08770;">Ocean</span><span>,
+</span><span>    </span><span style="color:#d08770;">Desert
+</span><span>}
+</span></code></pre>
+<p>Y luego actualizar <code>HexTileInfo</code>:</p>
+<pre data-lang="cs" style="background-color:#2b303b;color:#c0c5ce;" class="language-cs "><code class="language-cs" data-lang="cs"><span style="color:#b48ead;">public </span><span>TileType </span><span style="color:#bf616a;">tileType</span><span>;
+</span></code></pre>
+<p>Unity lo muestra como un dropdown en el Inspector, y desde código las comparaciones son seguras y rápidas:</p>
+<pre data-lang="cs" style="background-color:#2b303b;color:#c0c5ce;" class="language-cs "><code class="language-cs" data-lang="cs"><span style="color:#b48ead;">if </span><span>(</span><span style="color:#bf616a;">tile</span><span>.</span><span style="color:#bf616a;">tileType </span><span>== </span><span style="color:#bf616a;">TileType</span><span>.</span><span style="color:#bf616a;">Ocean</span><span>)
+</span><span>{
+</span><span>    </span><span style="color:#65737e;">// Bloquear movimiento
+</span><span>}
+</span></code></pre>
+<hr />
+<h2 id="centralizando-el-mapa-con-hexmapmanager"><a class="zola-anchor" href="#centralizando-el-mapa-con-hexmapmanager" aria-label="Anchor link for: centralizando-el-mapa-con-hexmapmanager">Centralizando el mapa con HexMapManager</a></h2>
+<p>Para evitar tener que hacer raycasts o buscar GameObjects cada vez que queramos saber algo sobre un tile, creamos una clase llamada <code>HexMapManager</code> que actúa como fuente de verdad para todos los hexágonos.</p>
+<pre data-lang="cs" style="background-color:#2b303b;color:#c0c5ce;" class="language-cs "><code class="language-cs" data-lang="cs"><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">HexMapManager </span><span style="color:#eff1f5;">: </span><span style="color:#a3be8c;">MonoBehaviour
+</span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public static </span><span style="color:#eff1f5;">HexMapManager </span><span style="color:#bf616a;">Instance </span><span style="color:#eff1f5;">{ </span><span style="color:#b48ead;">get</span><span style="color:#eff1f5;">; </span><span style="color:#b48ead;">private set</span><span style="color:#eff1f5;">; }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">private </span><span style="color:#eff1f5;">Dictionary&lt;Vector2Int, HexTileInfo&gt; </span><span style="color:#bf616a;">tileMap </span><span>= new</span><span style="color:#eff1f5;">();
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">void </span><span style="color:#8fa1b3;">Awake</span><span style="color:#eff1f5;">()
+</span><span style="color:#eff1f5;">    {
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">Instance </span><span>= </span><span style="color:#bf616a;">this</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public void </span><span style="color:#8fa1b3;">RegisterTile</span><span style="color:#eff1f5;">(Vector2Int </span><span style="color:#bf616a;">coords</span><span style="color:#eff1f5;">, HexTileInfo </span><span style="color:#bf616a;">tile</span><span style="color:#eff1f5;">)
+</span><span style="color:#eff1f5;">    {
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">tileMap</span><span style="color:#eff1f5;">[</span><span style="color:#bf616a;">coords</span><span style="color:#eff1f5;">] </span><span>= </span><span style="color:#bf616a;">tile</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public bool </span><span style="color:#8fa1b3;">TryGetTile</span><span style="color:#eff1f5;">(Vector2Int </span><span style="color:#bf616a;">coords</span><span style="color:#eff1f5;">, </span><span style="color:#b48ead;">out </span><span style="color:#eff1f5;">HexTileInfo </span><span style="color:#bf616a;">tile</span><span style="color:#eff1f5;">)
+</span><span style="color:#eff1f5;">    {
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">return </span><span style="color:#bf616a;">tileMap</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">TryGetValue</span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">coords</span><span style="color:#eff1f5;">, </span><span style="color:#b48ead;">out </span><span style="color:#bf616a;">tile</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public bool </span><span style="color:#8fa1b3;">IsNavigable</span><span style="color:#eff1f5;">(Vector2Int </span><span style="color:#bf616a;">coords</span><span style="color:#eff1f5;">)
+</span><span style="color:#eff1f5;">    {
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">return </span><span style="color:#bf616a;">TryGetTile</span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">coords</span><span style="color:#eff1f5;">, </span><span style="color:#b48ead;">out var </span><span style="color:#bf616a;">tile</span><span style="color:#eff1f5;">) </span><span>&amp;&amp; </span><span style="color:#bf616a;">tile</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">tileType </span><span>!= </span><span style="color:#bf616a;">TileType</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">Ocean</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<p>Durante la generación de la cuadrícula, registramos cada tile:</p>
+<pre data-lang="cs" style="background-color:#2b303b;color:#c0c5ce;" class="language-cs "><code class="language-cs" data-lang="cs"><span>Vector2Int </span><span style="color:#bf616a;">coords </span><span>= new(</span><span style="color:#bf616a;">col</span><span>, </span><span style="color:#bf616a;">row</span><span>);
+</span><span style="color:#bf616a;">HexMapManager</span><span>.</span><span style="color:#bf616a;">Instance</span><span>.</span><span style="color:#bf616a;">RegisterTile</span><span>(</span><span style="color:#bf616a;">coords</span><span>, </span><span style="color:#bf616a;">info</span><span>);
+</span></code></pre>
+<p>Y luego podemos consultar desde cualquier script:</p>
+<pre data-lang="cs" style="background-color:#2b303b;color:#c0c5ce;" class="language-cs "><code class="language-cs" data-lang="cs"><span style="color:#b48ead;">if </span><span>(</span><span style="color:#bf616a;">HexMapManager</span><span>.</span><span style="color:#bf616a;">Instance</span><span>.</span><span style="color:#bf616a;">IsNavigable</span><span>(</span><span style="color:#bf616a;">qrCoords</span><span>))
+</span><span>{
+</span><span>    </span><span style="color:#65737e;">// Mover al personaje
+</span><span>}
+</span></code></pre>
+<hr />
+<h2 id="ventajas-de-esta-refactorizacion"><a class="zola-anchor" href="#ventajas-de-esta-refactorizacion" aria-label="Anchor link for: ventajas-de-esta-refactorizacion">Ventajas de esta refactorización</a></h2>
+<ul>
+<li>Acceso rápido y centralizado a la información de los tiles.</li>
+<li>Código más limpio, seguro y legible.</li>
+<li>Mayor facilidad para extender el sistema (por ejemplo, podríamos agregar <code>GetMovementCost()</code> según el tipo de tile).</li>
+</ul>
+<p>En el próximo artículo vamos a centrarnos en todo lo relacionado con el movimiento del personaje, desde la selección del tile hasta el seguimiento de cámara inteligente.</p>
+
+    </div>
+</article>
+
+    
+<div class="border"></div>
+<script src="https://giscus.app/client.js"
+        data-repo="sh4ka/programando-con-unity"
+        data-repo-id="R_kgDOO1aSxA"
+        data-category="General"
+        data-category-id="DIC_kwDOO1aSxM4CrExF"
+        data-mapping="pathname"
+        data-strict="1"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="bottom"
+        data-theme="preferred_color_scheme"
+        data-lang="es"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+</script>
+</main>
+
+  
+  <footer>
+    
+    <div class="border"></div>
+    <div class="footer">
+      <small class="footer-left">
+        Copyright &copy; Jesús Flores
+      </small>
+      <small class="footer-right">
+        Powered by <a href="https://www.getzola.org">Zola</a> | Theme <a href="https://github.com/barlog-m/oceanic-zen">Oceanic Zen</a>
+      </small>
+    </div>
+    
+  </footer>
+  
+</div>
+</body>
+</html>

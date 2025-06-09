@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  
+
+  <title></title>
+
+  
+  <link rel="stylesheet" href="https://programandoconunity.es/theme.css">
+  
+  
+</head>
+<body>
+<div class="content">
+  
+  
+  <header>
+    <div class="header-left">
+      <a href="https:&#x2F;&#x2F;programandoconunity.es" class="logo"></a>
+    </div>
+    <div class="header-right">
+      <nav itemscope itemtype="http://schema.org/SiteNavigationElement">
+        <ul>
+          
+          
+          
+          <li class="nav">
+            <a itemprop="url" href="https://programandoconunity.es/blog/">
+              <span itemprop="name">Lista de artículos del blog</span>
+            </a>
+          </li>
+          
+          
+          <li class="nav">
+            <a itemprop="url" href="https://github.com/sh4ka">
+              <img class="icon" src="https:&#x2F;&#x2F;programandoconunity.es/icons/github.svg" alt="Github">
+            </a>
+          </li>
+          
+          
+        </ul>
+      </nav>
+    </div>
+  </header>
+  
+  
+  <main>
+    
+<article itemscope itemtype="http://schema.org/BlogPosting">
+    <div itemprop="headline">
+        <h1>Sistema de dados y tablas aleatorias en Unity</h1>
+        <div class="border"></div>
+        <time datetime="2025-06-05" class="date" itemprop="datePublished">
+            05 Jun 2025
+        </time>
+    </div>
+    <div itemprop="articleBody">
+        <h1 id="sistema-de-dados-y-tablas-aleatorias-en-unity"><a class="zola-anchor" href="#sistema-de-dados-y-tablas-aleatorias-en-unity" aria-label="Anchor link for: sistema-de-dados-y-tablas-aleatorias-en-unity">Sistema de dados y tablas aleatorias en Unity</a></h1>
+<p>En muchos juegos de rol o estrategia, es común encontrar tablas de eventos o resultados que se activan mediante una tirada de dados. En este artículo te explico paso a paso cómo implementar un sistema de dados y tablas aleatorias en Unity, utilizando un generador de números aleatorios determinista para obtener resultados reproducibles.</p>
+<hr />
+<h2 id="por-que-usar-dados-y-tablas"><a class="zola-anchor" href="#por-que-usar-dados-y-tablas" aria-label="Anchor link for: por-que-usar-dados-y-tablas">¿Por qué usar dados y tablas?</a></h2>
+<p>El uso de dados permite introducir incertidumbre de forma controlada. Una tabla aleatoria puede modelar desde clima hasta encuentros o recompensas. Por ejemplo:</p>
+<ul>
+<li>Una tabla de 1 a 100 puede representar tipos de eventos.</li>
+<li>Cada fila se activa con un rango de resultados (como 01–10: lluvia).</li>
+<li>La tirada de dados define qué entrada se activa.</li>
+</ul>
+<hr />
+<h2 id="crear-la-clase-diceexpression"><a class="zola-anchor" href="#crear-la-clase-diceexpression" aria-label="Anchor link for: crear-la-clase-diceexpression">Crear la clase <code>DiceExpression</code></a></h2>
+<p>Creamos una clase serializable que representa combinaciones del tipo <code>2d6 + 3</code>:</p>
+<pre data-lang="cs" style="background-color:#2b303b;color:#c0c5ce;" class="language-cs "><code class="language-cs" data-lang="cs"><span style="color:#b48ead;">using </span><span>Unity.Mathematics;
+</span><span>
+</span><span style="color:#b48ead;">namespace </span><span>Etrelia.Unity.Core
+</span><span>{
+</span><span>    [</span><span style="color:#bf616a;">System</span><span>.</span><span style="color:#bf616a;">Serializable</span><span>]
+</span><span>    </span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">DiceExpression
+</span><span style="color:#eff1f5;">    {
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">public int </span><span style="color:#bf616a;">diceCount </span><span>= </span><span style="color:#d08770;">1</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">public int </span><span style="color:#bf616a;">diceSides </span><span>= </span><span style="color:#d08770;">6</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">public int </span><span style="color:#bf616a;">modifier </span><span>= </span><span style="color:#d08770;">0</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">public </span><span style="color:#8fa1b3;">DiceExpression</span><span style="color:#eff1f5;">(</span><span style="color:#b48ead;">int </span><span style="color:#bf616a;">count</span><span style="color:#eff1f5;">, </span><span style="color:#b48ead;">int </span><span style="color:#bf616a;">sides</span><span style="color:#eff1f5;">, </span><span style="color:#b48ead;">int </span><span style="color:#bf616a;">modifier </span><span>= </span><span style="color:#d08770;">0</span><span style="color:#eff1f5;">)
+</span><span style="color:#eff1f5;">        {
+</span><span style="color:#eff1f5;">            </span><span style="color:#bf616a;">this</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">diceCount </span><span>= </span><span style="color:#bf616a;">count</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">            </span><span style="color:#bf616a;">this</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">diceSides </span><span>= </span><span style="color:#bf616a;">sides</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">            </span><span style="color:#bf616a;">this</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">modifier </span><span>= </span><span style="color:#bf616a;">modifier</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">        }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">public int </span><span style="color:#8fa1b3;">Roll</span><span style="color:#eff1f5;">(</span><span style="color:#b48ead;">ref </span><span style="color:#eff1f5;">Random </span><span style="color:#bf616a;">rng</span><span style="color:#eff1f5;">)
+</span><span style="color:#eff1f5;">        {
+</span><span style="color:#eff1f5;">            </span><span style="color:#b48ead;">int </span><span style="color:#bf616a;">total </span><span>= </span><span style="color:#d08770;">0</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">            </span><span style="color:#b48ead;">for </span><span style="color:#eff1f5;">(</span><span style="color:#b48ead;">int </span><span style="color:#bf616a;">i </span><span>= </span><span style="color:#d08770;">0</span><span style="color:#eff1f5;">; </span><span style="color:#bf616a;">i </span><span>&lt; </span><span style="color:#bf616a;">diceCount</span><span style="color:#eff1f5;">; </span><span style="color:#bf616a;">i</span><span>++</span><span style="color:#eff1f5;">)
+</span><span style="color:#eff1f5;">            {
+</span><span style="color:#eff1f5;">                </span><span style="color:#bf616a;">total </span><span>+= </span><span style="color:#bf616a;">rng</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">NextInt</span><span style="color:#eff1f5;">(</span><span style="color:#d08770;">1</span><span style="color:#eff1f5;">, </span><span style="color:#bf616a;">diceSides </span><span>+ </span><span style="color:#d08770;">1</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">            }
+</span><span style="color:#eff1f5;">            </span><span style="color:#b48ead;">return </span><span style="color:#bf616a;">total </span><span>+ </span><span style="color:#bf616a;">modifier</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">        }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">public override string </span><span style="color:#8fa1b3;">ToString</span><span style="color:#eff1f5;">()
+</span><span style="color:#eff1f5;">        {
+</span><span style="color:#eff1f5;">            </span><span style="color:#b48ead;">string </span><span style="color:#bf616a;">mod </span><span>= </span><span style="color:#bf616a;">modifier </span><span>== </span><span style="color:#d08770;">0 </span><span>? &quot;&quot; :
+</span><span style="color:#eff1f5;">                         </span><span style="color:#bf616a;">modifier </span><span>&gt; </span><span style="color:#d08770;">0 </span><span>? $&quot;</span><span style="color:#a3be8c;"> + </span><span style="color:#eff1f5;">{</span><span style="color:#bf616a;">modifier</span><span style="color:#eff1f5;">}</span><span>&quot; : $&quot;</span><span style="color:#a3be8c;"> - </span><span style="color:#eff1f5;">{</span><span>-</span><span style="color:#bf616a;">modifier</span><span style="color:#eff1f5;">}</span><span>&quot;</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">            </span><span style="color:#b48ead;">return </span><span>$&quot;</span><span style="color:#eff1f5;">{</span><span style="color:#bf616a;">diceCount</span><span style="color:#eff1f5;">}</span><span style="color:#a3be8c;">d</span><span style="color:#eff1f5;">{</span><span style="color:#bf616a;">diceSides</span><span style="color:#eff1f5;">}{</span><span style="color:#bf616a;">mod</span><span style="color:#eff1f5;">}</span><span>&quot;</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">        }
+</span><span style="color:#eff1f5;">    }
+</span><span>}
+</span></code></pre>
+<hr />
+<h2 id="clase-randomtableentry-y-randomtable"><a class="zola-anchor" href="#clase-randomtableentry-y-randomtable" aria-label="Anchor link for: clase-randomtableentry-y-randomtable">Clase <code>RandomTableEntry</code> y <code>RandomTable</code></a></h2>
+<p>Estas clases permiten definir las tablas con rangos de resultados:</p>
+<pre data-lang="cs" style="background-color:#2b303b;color:#c0c5ce;" class="language-cs "><code class="language-cs" data-lang="cs"><span style="color:#b48ead;">namespace </span><span>Etrelia.Unity.Tables
+</span><span>{
+</span><span>    [</span><span style="color:#bf616a;">System</span><span>.</span><span style="color:#bf616a;">Serializable</span><span>]
+</span><span>    </span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">RandomTableEntry
+</span><span style="color:#eff1f5;">    {
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">public int </span><span style="color:#bf616a;">minRoll</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">public int </span><span style="color:#bf616a;">maxRoll</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">public string </span><span style="color:#bf616a;">result</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">    }
+</span><span>}
+</span></code></pre>
+<pre data-lang="cs" style="background-color:#2b303b;color:#c0c5ce;" class="language-cs "><code class="language-cs" data-lang="cs"><span style="color:#b48ead;">using </span><span>System.Collections.Generic;
+</span><span style="color:#b48ead;">using </span><span>UnityEngine;
+</span><span style="color:#b48ead;">using </span><span>Unity.Mathematics;
+</span><span style="color:#b48ead;">using </span><span>Etrelia.Unity.Core;
+</span><span>
+</span><span style="color:#b48ead;">namespace </span><span>Etrelia.Unity.Tables
+</span><span>{
+</span><span>    [</span><span style="color:#bf616a;">CreateAssetMenu</span><span>(</span><span style="color:#bf616a;">fileName </span><span>= &quot;</span><span style="color:#a3be8c;">NewRandomTable</span><span>&quot;, </span><span style="color:#bf616a;">menuName </span><span>= &quot;</span><span style="color:#a3be8c;">Tables/RandomTable</span><span>&quot;)]
+</span><span>    </span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">RandomTable </span><span style="color:#eff1f5;">: </span><span style="color:#a3be8c;">ScriptableObject
+</span><span style="color:#eff1f5;">    {
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">public string </span><span style="color:#bf616a;">tableName</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">public </span><span style="color:#eff1f5;">DiceExpression </span><span style="color:#bf616a;">diceUsed</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">public </span><span style="color:#eff1f5;">List&lt;RandomTableEntry&gt; </span><span style="color:#bf616a;">entries</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">public string </span><span style="color:#8fa1b3;">RollAndGetResult</span><span style="color:#eff1f5;">(</span><span style="color:#b48ead;">ref </span><span style="color:#eff1f5;">Random </span><span style="color:#bf616a;">rng</span><span style="color:#eff1f5;">)
+</span><span style="color:#eff1f5;">        {
+</span><span style="color:#eff1f5;">            </span><span style="color:#b48ead;">int </span><span style="color:#bf616a;">roll </span><span>= </span><span style="color:#bf616a;">diceUsed</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">Roll</span><span style="color:#eff1f5;">(</span><span style="color:#b48ead;">ref </span><span style="color:#bf616a;">rng</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">            </span><span style="color:#b48ead;">return </span><span style="color:#bf616a;">GetResult</span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">roll</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">        }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">public string </span><span style="color:#8fa1b3;">GetResult</span><span style="color:#eff1f5;">(</span><span style="color:#b48ead;">int </span><span style="color:#bf616a;">roll</span><span style="color:#eff1f5;">)
+</span><span style="color:#eff1f5;">        {
+</span><span style="color:#eff1f5;">            </span><span style="color:#b48ead;">foreach </span><span style="color:#eff1f5;">(</span><span style="color:#b48ead;">var </span><span style="color:#bf616a;">entry </span><span style="color:#b48ead;">in </span><span style="color:#bf616a;">entries</span><span style="color:#eff1f5;">)
+</span><span style="color:#eff1f5;">            {
+</span><span style="color:#eff1f5;">                </span><span style="color:#b48ead;">if </span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">roll </span><span>&gt;= </span><span style="color:#bf616a;">entry</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">minRoll </span><span>&amp;&amp; </span><span style="color:#bf616a;">roll </span><span>&lt;= </span><span style="color:#bf616a;">entry</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">maxRoll</span><span style="color:#eff1f5;">)
+</span><span style="color:#eff1f5;">                    </span><span style="color:#b48ead;">return </span><span style="color:#bf616a;">entry</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">result</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">            }
+</span><span style="color:#eff1f5;">            </span><span style="color:#b48ead;">return </span><span>$&quot;</span><span style="color:#a3be8c;">(</span><span style="color:#eff1f5;">{</span><span style="color:#bf616a;">roll</span><span style="color:#eff1f5;">}</span><span style="color:#a3be8c;">) Sin resultado válido</span><span>&quot;</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">        }
+</span><span style="color:#eff1f5;">    }
+</span><span>}
+</span></code></pre>
+<p>Esto te permite crear assets en el editor como tablas aleatorias con sus respectivos dados y rangos.</p>
+<hr />
+<h2 id="gamemanager-el-controlador-central-del-juego"><a class="zola-anchor" href="#gamemanager-el-controlador-central-del-juego" aria-label="Anchor link for: gamemanager-el-controlador-central-del-juego"><code>GameManager</code>: el controlador central del juego</a></h2>
+<p>Creamos un singleton que mantenga el stream aleatorio y sirva para acceder al sistema:</p>
+<pre data-lang="cs" style="background-color:#2b303b;color:#c0c5ce;" class="language-cs "><code class="language-cs" data-lang="cs"><span style="color:#b48ead;">using </span><span>UnityEngine;
+</span><span style="color:#b48ead;">using </span><span>Unity.Mathematics;
+</span><span>
+</span><span style="color:#b48ead;">namespace </span><span>Etrelia.Unity.Core
+</span><span>{
+</span><span>    </span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">GameManager </span><span style="color:#eff1f5;">: </span><span style="color:#a3be8c;">MonoBehaviour
+</span><span style="color:#eff1f5;">    {
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">public static </span><span style="color:#eff1f5;">GameManager </span><span style="color:#bf616a;">Instance </span><span style="color:#eff1f5;">{ </span><span style="color:#b48ead;">get</span><span style="color:#eff1f5;">; </span><span style="color:#b48ead;">private set</span><span style="color:#eff1f5;">; }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">        [</span><span style="color:#bf616a;">Header</span><span style="color:#eff1f5;">(</span><span>&quot;</span><span style="color:#a3be8c;">Random Stream</span><span>&quot;</span><span style="color:#eff1f5;">)]
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">public uint </span><span style="color:#bf616a;">seed </span><span>= </span><span style="color:#d08770;">12345</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">private </span><span style="color:#eff1f5;">Random </span><span style="color:#bf616a;">rng</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">void </span><span style="color:#8fa1b3;">Awake</span><span style="color:#eff1f5;">()
+</span><span style="color:#eff1f5;">        {
+</span><span style="color:#eff1f5;">            </span><span style="color:#b48ead;">if </span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">Instance </span><span>!= </span><span style="color:#d08770;">null </span><span>&amp;&amp; </span><span style="color:#bf616a;">Instance </span><span>!= </span><span style="color:#bf616a;">this</span><span style="color:#eff1f5;">)
+</span><span style="color:#eff1f5;">            {
+</span><span style="color:#eff1f5;">                </span><span style="color:#bf616a;">Destroy</span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">gameObject</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">                </span><span style="color:#b48ead;">return</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">            }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">            </span><span style="color:#bf616a;">Instance </span><span>= </span><span style="color:#bf616a;">this</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">            </span><span style="color:#bf616a;">DontDestroyOnLoad</span><span style="color:#eff1f5;">(</span><span style="color:#bf616a;">gameObject</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">            </span><span style="color:#bf616a;">rng </span><span>= new </span><span style="color:#eff1f5;">Random(</span><span style="color:#bf616a;">seed</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">        }
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">public </span><span style="color:#eff1f5;">Random </span><span style="color:#8fa1b3;">GetRNG</span><span style="color:#eff1f5;">() </span><span style="color:#b48ead;">=&gt; </span><span style="color:#bf616a;">rng</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">public int </span><span style="color:#8fa1b3;">RollDice</span><span style="color:#eff1f5;">(DiceExpression </span><span style="color:#bf616a;">dice</span><span style="color:#eff1f5;">) </span><span style="color:#b48ead;">=&gt; </span><span style="color:#bf616a;">dice</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">Roll</span><span style="color:#eff1f5;">(</span><span style="color:#b48ead;">ref </span><span style="color:#bf616a;">rng</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">    }
+</span><span>}
+</span></code></pre>
+<p>Este objeto debe estar presente en la escena inicial. Lo ideal es guardarlo como prefab y cargarlo desde la primera escena.</p>
+<hr />
+<h2 id="ejemplo-de-uso"><a class="zola-anchor" href="#ejemplo-de-uso" aria-label="Anchor link for: ejemplo-de-uso">Ejemplo de uso</a></h2>
+<pre data-lang="cs" style="background-color:#2b303b;color:#c0c5ce;" class="language-cs "><code class="language-cs" data-lang="cs"><span style="color:#b48ead;">using </span><span>UnityEngine;
+</span><span style="color:#b48ead;">using </span><span>Etrelia.Unity.Core;
+</span><span style="color:#b48ead;">using </span><span>Etrelia.Unity.Tables;
+</span><span>
+</span><span style="color:#b48ead;">public class </span><span style="color:#ebcb8b;">TestRoll </span><span style="color:#eff1f5;">: </span><span style="color:#a3be8c;">MonoBehaviour
+</span><span style="color:#eff1f5;">{
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">public </span><span style="color:#eff1f5;">RandomTable </span><span style="color:#bf616a;">table</span><span style="color:#eff1f5;">;
+</span><span style="color:#eff1f5;">
+</span><span style="color:#eff1f5;">    </span><span style="color:#b48ead;">void </span><span style="color:#8fa1b3;">Start</span><span style="color:#eff1f5;">()
+</span><span style="color:#eff1f5;">    {
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">var </span><span style="color:#bf616a;">rng </span><span>= </span><span style="color:#bf616a;">GameManager</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">Instance</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">GetRNG</span><span style="color:#eff1f5;">();
+</span><span style="color:#eff1f5;">        </span><span style="color:#b48ead;">string </span><span style="color:#bf616a;">result </span><span>= </span><span style="color:#bf616a;">table</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">RollAndGetResult</span><span style="color:#eff1f5;">(</span><span style="color:#b48ead;">ref </span><span style="color:#bf616a;">rng</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">        </span><span style="color:#bf616a;">Debug</span><span style="color:#eff1f5;">.</span><span style="color:#bf616a;">Log</span><span style="color:#eff1f5;">(</span><span>$&quot;</span><span style="color:#a3be8c;">Resultado obtenido: </span><span style="color:#eff1f5;">{</span><span style="color:#bf616a;">result</span><span style="color:#eff1f5;">}</span><span>&quot;</span><span style="color:#eff1f5;">);
+</span><span style="color:#eff1f5;">    }
+</span><span style="color:#eff1f5;">}
+</span></code></pre>
+<hr />
+<h2 id="conclusion"><a class="zola-anchor" href="#conclusion" aria-label="Anchor link for: conclusion">Conclusión</a></h2>
+<p>Con este sistema tienes:</p>
+<ul>
+<li>Dados configurables y reutilizables</li>
+<li>Tablas que dependen de los dados para determinar resultados</li>
+<li>Un GameManager que mantiene el RNG estable para todo el juego</li>
+</ul>
+<p>Esto te permite avanzar hacia un sistema de narrativa procedural, encuentros aleatorios, loot controlado y mucho más.</p>
+<blockquote>
+<p><a href="https://programandoconunity.es/blog/hex-grid-outline/#6-2-script-mousehighlighter-cs">Configurar <code>MouseHighlighterManager</code></a></p>
+</blockquote>
+<p>¡Ahora puedes usar dados de verdad en tu juego sin perder el control! 🎲</p>
+
+    </div>
+</article>
+
+    
+<div class="border"></div>
+<script src="https://giscus.app/client.js"
+        data-repo="sh4ka/programando-con-unity"
+        data-repo-id="R_kgDOO1aSxA"
+        data-category="General"
+        data-category-id="DIC_kwDOO1aSxM4CrExF"
+        data-mapping="pathname"
+        data-strict="1"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="bottom"
+        data-theme="preferred_color_scheme"
+        data-lang="es"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+</script>
+</main>
+
+  
+  <footer>
+    
+    <div class="border"></div>
+    <div class="footer">
+      <small class="footer-left">
+        Copyright &copy; Jesús Flores
+      </small>
+      <small class="footer-right">
+        Powered by <a href="https://www.getzola.org">Zola</a> | Theme <a href="https://github.com/barlog-m/oceanic-zen">Oceanic Zen</a>
+      </small>
+    </div>
+    
+  </footer>
+  
+</div>
+</body>
+</html>

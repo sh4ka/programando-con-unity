@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  
+
+  <title></title>
+
+  
+  <link rel="stylesheet" href="https://programandoconunity.es/theme.css">
+  
+  
+</head>
+<body>
+<div class="content">
+  
+  
+  <header>
+    <div class="header-left">
+      <a href="https:&#x2F;&#x2F;programandoconunity.es" class="logo"></a>
+    </div>
+    <div class="header-right">
+      <nav itemscope itemtype="http://schema.org/SiteNavigationElement">
+        <ul>
+          
+          
+          
+          <li class="nav">
+            <a itemprop="url" href="https://programandoconunity.es/blog/">
+              <span itemprop="name">Lista de artículos del blog</span>
+            </a>
+          </li>
+          
+          
+          <li class="nav">
+            <a itemprop="url" href="https://github.com/sh4ka">
+              <img class="icon" src="https:&#x2F;&#x2F;programandoconunity.es/icons/github.svg" alt="Github">
+            </a>
+          </li>
+          
+          
+        </ul>
+      </nav>
+    </div>
+  </header>
+  
+  
+  <main>
+    
+<article itemscope itemtype="http://schema.org/BlogPosting">
+    <div itemprop="headline">
+        <h1>Generación de grid de forma procedural</h1>
+        <div class="border"></div>
+        <time datetime="2025-06-04" class="date" itemprop="datePublished">
+            04 Jun 2025
+        </time>
+    </div>
+    <div itemprop="articleBody">
+        <h1 id="como-combinar-contorno-interactivo-y-generacion-procedural-en-una-cuadricula-hexagonal-en-unity"><a class="zola-anchor" href="#como-combinar-contorno-interactivo-y-generacion-procedural-en-una-cuadricula-hexagonal-en-unity" aria-label="Anchor link for: como-combinar-contorno-interactivo-y-generacion-procedural-en-una-cuadricula-hexagonal-en-unity">Cómo combinar contorno interactivo y generación procedural en una cuadrícula hexagonal en Unity</a></h1>
+<blockquote>
+<p>En este artículo aprenderás a generar una cuadrícula de hexágonos flat-top en Unity, asignar a cada celda valores naturales como altura, humedad y temperatura usando ruido Perlin, y además resaltar con un contorno animado el hexágono bajo el ratón.</p>
+</blockquote>
+<hr />
+<h2 id="indice"><a class="zola-anchor" href="#indice" aria-label="Anchor link for: indice">Índice</a></h2>
+<ol>
+<li><a href="https://programandoconunity.es/blog/generacion-grid-procedural/#resumen-del-objetivo">Resumen del objetivo</a></li>
+<li><a href="https://programandoconunity.es/blog/generacion-grid-procedural/#preparar-el-proyecto-y-los-sprites">Preparar el proyecto y los sprites</a></li>
+<li><a href="https://programandoconunity.es/blog/generacion-grid-procedural/#generar-la-cuadricula-procedural">Generar la cuadrícula procedural</a></li>
+<li><a href="https://programandoconunity.es/blog/generacion-grid-procedural/#visualizar-valores-naturales">Visualizar valores naturales</a></li>
+<li><a href="https://programandoconunity.es/blog/generacion-grid-procedural/#agregar-contorno-interactivo-con-linerenderer">Agregar contorno interactivo con LineRenderer</a></li>
+<li><a href="https://programandoconunity.es/blog/generacion-grid-procedural/#resultado-final-y-sugerencias">Resultado final y sugerencias</a></li>
+</ol>
+<hr />
+<h2 id="resumen-del-objetivo"><a class="zola-anchor" href="#resumen-del-objetivo" aria-label="Anchor link for: resumen-del-objetivo">Resumen del objetivo</a></h2>
+<p>Partiendo desde cero o con una base como la del artículo anterior <a href="https://programandoconunity.es/blog/hex-grid-outline/">Cómo crear una cuadrícula de hexágonos “flat‐top”</a>, vamos a integrar:</p>
+<ul>
+<li>
+<p>Un sistema para generar cada tile con valores naturales:</p>
+<ul>
+<li><strong>altura</strong></li>
+<li><strong>humedad</strong></li>
+<li><strong>temperatura</strong></li>
+</ul>
+</li>
+<li>
+<p>Una visualización directa de esos valores como color</p>
+</li>
+<li>
+<p>Un contorno animado con LineRenderer que sigue el ratón</p>
+</li>
+</ul>
+<p>Todo esto usando <strong>Input System</strong>, <strong>Perlin Noise</strong> y sin shaders personalizados (ideal para empezar sin complicaciones).</p>
+<hr />
+<h2 id="preparar-el-proyecto-y-los-sprites"><a class="zola-anchor" href="#preparar-el-proyecto-y-los-sprites" aria-label="Anchor link for: preparar-el-proyecto-y-los-sprites">Preparar el proyecto y los sprites</a></h2>
+<p>Sigue los pasos de los apartados 1 y 2 del artículo anterior <a href="https://programandoconunity.es/blog/hex-grid-outline/">Cómo crear una cuadrícula de hexágonos “flat‐top”</a>. Asegúrate de:</p>
+<ul>
+<li>
+<p>Tener los sprites <code>HexSprite.png</code> correctamente importados como <code>Sprite (2D and UI)</code> con <code>Pixels Per Unit = 100</code></p>
+</li>
+<li>
+<p>Crear un prefab <code>HexTile.prefab</code> con:</p>
+<ul>
+<li>SpriteRenderer</li>
+<li>PolygonCollider2D</li>
+<li>Script <code>HexTileInfo</code> que guarda las coordenadas <code>q</code> y <code>r</code></li>
+</ul>
+</li>
+</ul>
+<hr />
+<h2 id="generar-la-cuadricula-procedural"><a class="zola-anchor" href="#generar-la-cuadricula-procedural" aria-label="Anchor link for: generar-la-cuadricula-procedural">Generar la cuadrícula procedural</a></h2>
+<p>El script <code>HexGridGenerator.cs</code> debe:</p>
+<ul>
+<li>Instanciar los hexágonos en posición según layout <strong>odd-q offset</strong></li>
+<li>Calcular para cada uno valores de ruido procedural</li>
+</ul>
+<h3 id="valores-naturales-por-ruido"><a class="zola-anchor" href="#valores-naturales-por-ruido" aria-label="Anchor link for: valores-naturales-por-ruido">Valores naturales por ruido:</a></h3>
+<pre data-lang="cs" style="background-color:#2b303b;color:#c0c5ce;" class="language-cs "><code class="language-cs" data-lang="cs"><span style="color:#b48ead;">float </span><span style="color:#bf616a;">nx </span><span>= </span><span style="color:#bf616a;">col </span><span>* </span><span style="color:#bf616a;">noiseScale</span><span>;
+</span><span style="color:#b48ead;">float </span><span style="color:#bf616a;">ny </span><span>= </span><span style="color:#bf616a;">row </span><span>* </span><span style="color:#bf616a;">noiseScale</span><span>;
+</span><span>
+</span><span style="color:#bf616a;">info</span><span>.</span><span style="color:#bf616a;">height </span><span>= </span><span style="color:#bf616a;">RoundToStep</span><span>(</span><span style="color:#bf616a;">Mathf</span><span>.</span><span style="color:#bf616a;">PerlinNoise</span><span>(</span><span style="color:#bf616a;">nx </span><span>+ </span><span style="color:#bf616a;">heightOffset</span><span>.</span><span style="color:#bf616a;">x</span><span>, </span><span style="color:#bf616a;">ny </span><span>+ </span><span style="color:#bf616a;">heightOffset</span><span>.</span><span style="color:#bf616a;">y</span><span>));
+</span><span style="color:#bf616a;">info</span><span>.</span><span style="color:#bf616a;">moisture </span><span>= </span><span style="color:#bf616a;">RoundToStep</span><span>(</span><span style="color:#bf616a;">Mathf</span><span>.</span><span style="color:#bf616a;">PerlinNoise</span><span>(</span><span style="color:#bf616a;">nx </span><span>+ </span><span style="color:#bf616a;">moistureOffset</span><span>.</span><span style="color:#bf616a;">x</span><span>, </span><span style="color:#bf616a;">ny </span><span>+ </span><span style="color:#bf616a;">moistureOffset</span><span>.</span><span style="color:#bf616a;">y</span><span>));
+</span><span style="color:#bf616a;">info</span><span>.</span><span style="color:#bf616a;">temperature </span><span>= </span><span style="color:#bf616a;">RoundToStep</span><span>(</span><span style="color:#bf616a;">Mathf</span><span>.</span><span style="color:#bf616a;">PerlinNoise</span><span>(</span><span style="color:#bf616a;">nx </span><span>+ </span><span style="color:#bf616a;">temperatureOffset</span><span>.</span><span style="color:#bf616a;">x</span><span>, </span><span style="color:#bf616a;">ny </span><span>+ </span><span style="color:#bf616a;">temperatureOffset</span><span>.</span><span style="color:#bf616a;">y</span><span>));
+</span></code></pre>
+<p>Donde <code>RoundToStep</code> es:</p>
+<pre data-lang="cs" style="background-color:#2b303b;color:#c0c5ce;" class="language-cs "><code class="language-cs" data-lang="cs"><span style="color:#b48ead;">float </span><span style="color:#8fa1b3;">RoundToStep</span><span>(</span><span style="color:#b48ead;">float </span><span style="color:#bf616a;">value</span><span>, </span><span style="color:#b48ead;">float </span><span style="color:#bf616a;">step </span><span>= </span><span style="color:#d08770;">0.1</span><span style="color:#b48ead;">f</span><span>)
+</span><span>{
+</span><span>    </span><span style="color:#b48ead;">return </span><span style="color:#bf616a;">Mathf</span><span>.</span><span style="color:#bf616a;">Round</span><span>(</span><span style="color:#bf616a;">value </span><span>/ </span><span style="color:#bf616a;">step</span><span>) * </span><span style="color:#bf616a;">step</span><span>;
+</span><span>}
+</span></code></pre>
+<p>Define un <code>noiseScale</code> bajo (ej. 0.2) y offsets separados (0, 100, 200).</p>
+<hr />
+<h2 id="visualizar-valores-naturales"><a class="zola-anchor" href="#visualizar-valores-naturales" aria-label="Anchor link for: visualizar-valores-naturales">Visualizar valores naturales</a></h2>
+<p>Dentro del mismo <code>HexGridGenerator</code>, al instanciar cada tile puedes usar su <code>SpriteRenderer</code> para visualizar los valores. Ejemplo con altura:</p>
+<pre data-lang="cs" style="background-color:#2b303b;color:#c0c5ce;" class="language-cs "><code class="language-cs" data-lang="cs"><span style="color:#b48ead;">var </span><span style="color:#bf616a;">sr </span><span>= </span><span style="color:#bf616a;">hexGO</span><span>.</span><span style="color:#bf616a;">GetComponent</span><span>&lt;SpriteRenderer&gt;();
+</span><span style="color:#b48ead;">if </span><span>(</span><span style="color:#bf616a;">sr </span><span>!= </span><span style="color:#d08770;">null</span><span>)
+</span><span>{
+</span><span>    </span><span style="color:#b48ead;">float </span><span style="color:#bf616a;">h </span><span>= </span><span style="color:#bf616a;">info</span><span>.</span><span style="color:#bf616a;">height</span><span>;
+</span><span>    </span><span style="color:#bf616a;">sr</span><span>.</span><span style="color:#bf616a;">color </span><span>= </span><span style="color:#bf616a;">Color</span><span>.</span><span style="color:#bf616a;">Lerp</span><span>(</span><span style="color:#bf616a;">Color</span><span>.</span><span style="color:#bf616a;">black</span><span>, </span><span style="color:#bf616a;">Color</span><span>.</span><span style="color:#bf616a;">white</span><span>, </span><span style="color:#bf616a;">h</span><span>);
+</span><span>}
+</span></code></pre>
+<p>O visualización combinada en RGB:</p>
+<pre data-lang="cs" style="background-color:#2b303b;color:#c0c5ce;" class="language-cs "><code class="language-cs" data-lang="cs"><span style="color:#bf616a;">sr</span><span>.</span><span style="color:#bf616a;">color </span><span>= new Color(</span><span style="color:#bf616a;">info</span><span>.</span><span style="color:#bf616a;">height</span><span>, </span><span style="color:#bf616a;">info</span><span>.</span><span style="color:#bf616a;">moisture</span><span>, </span><span style="color:#bf616a;">info</span><span>.</span><span style="color:#bf616a;">temperature</span><span>);
+</span></code></pre>
+<p>Esto permite ver el "mapa" directamente desde la vista de escena.</p>
+<hr />
+<h2 id="agregar-contorno-interactivo-con-linerenderer"><a class="zola-anchor" href="#agregar-contorno-interactivo-con-linerenderer" aria-label="Anchor link for: agregar-contorno-interactivo-con-linerenderer">Agregar contorno interactivo con LineRenderer</a></h2>
+<p>Usaremos un prefab llamado <code>HexOutline</code> que contiene:</p>
+<ul>
+<li>Un <strong>LineRenderer</strong> configurado en modo local</li>
+<li>Un script <code>HexOutlineController</code> que calcula los 6 vértices para dibujar el borde</li>
+</ul>
+<h3 id="resumen-de-configuracion"><a class="zola-anchor" href="#resumen-de-configuracion" aria-label="Anchor link for: resumen-de-configuracion">Resumen de configuración:</a></h3>
+<ul>
+<li>
+<p>LineRenderer:</p>
+<ul>
+<li>Loop ✔</li>
+<li>Use World Space ✘</li>
+<li>Width: 0.05 (ajustable)</li>
+</ul>
+</li>
+<li>
+<p>Script <code>HexOutlineController.cs</code>:</p>
+</li>
+</ul>
+<pre data-lang="cs" style="background-color:#2b303b;color:#c0c5ce;" class="language-cs "><code class="language-cs" data-lang="cs"><span style="color:#b48ead;">public void </span><span style="color:#8fa1b3;">ShowAt</span><span>(Vector3 </span><span style="color:#bf616a;">worldPos</span><span>)
+</span><span>{
+</span><span>    </span><span style="color:#bf616a;">transform</span><span>.</span><span style="color:#bf616a;">position </span><span>= new Vector3(</span><span style="color:#bf616a;">worldPos</span><span>.</span><span style="color:#bf616a;">x</span><span>, </span><span style="color:#bf616a;">worldPos</span><span>.</span><span style="color:#bf616a;">y</span><span>, -</span><span style="color:#d08770;">0.1</span><span style="color:#b48ead;">f</span><span>);
+</span><span>    </span><span style="color:#bf616a;">lr</span><span>.</span><span style="color:#bf616a;">enabled </span><span>= </span><span style="color:#d08770;">true</span><span>;
+</span><span>}
+</span><span>
+</span><span style="color:#b48ead;">public void </span><span style="color:#8fa1b3;">Hide</span><span>()
+</span><span>{
+</span><span>    </span><span style="color:#bf616a;">lr</span><span>.</span><span style="color:#bf616a;">enabled </span><span>= </span><span style="color:#d08770;">false</span><span>;
+</span><span>}
+</span></code></pre>
+<h3 id="script-mousehighlighter"><a class="zola-anchor" href="#script-mousehighlighter" aria-label="Anchor link for: script-mousehighlighter">Script <code>MouseHighlighter</code></a></h3>
+<p>Este script usará raycast 2D con <code>InputSystem</code> para mover el contorno si el mouse está sobre un <code>HexTile</code>:</p>
+<pre data-lang="cs" style="background-color:#2b303b;color:#c0c5ce;" class="language-cs "><code class="language-cs" data-lang="cs"><span>RaycastHit2D </span><span style="color:#bf616a;">hit </span><span>= </span><span style="color:#bf616a;">Physics2D</span><span>.</span><span style="color:#bf616a;">Raycast</span><span>(</span><span style="color:#bf616a;">mouseWorld2D</span><span>, </span><span style="color:#bf616a;">Vector2</span><span>.</span><span style="color:#bf616a;">zero</span><span>);
+</span><span>
+</span><span style="color:#b48ead;">if </span><span>(</span><span style="color:#bf616a;">hit</span><span>.</span><span style="color:#bf616a;">collider </span><span>!= </span><span style="color:#d08770;">null </span><span>&amp;&amp; </span><span style="color:#bf616a;">hit</span><span>.</span><span style="color:#bf616a;">collider</span><span>.</span><span style="color:#bf616a;">CompareTag</span><span>(&quot;</span><span style="color:#a3be8c;">HexTile</span><span>&quot;))
+</span><span>{
+</span><span>    Vector3 </span><span style="color:#bf616a;">hexPos </span><span>= </span><span style="color:#bf616a;">hit</span><span>.</span><span style="color:#bf616a;">collider</span><span>.</span><span style="color:#bf616a;">gameObject</span><span>.</span><span style="color:#bf616a;">transform</span><span>.</span><span style="color:#bf616a;">position</span><span>;
+</span><span>    </span><span style="color:#bf616a;">outlineController</span><span>.</span><span style="color:#bf616a;">ShowAt</span><span>(</span><span style="color:#bf616a;">hexPos</span><span>);
+</span><span>}
+</span><span style="color:#b48ead;">else
+</span><span>{
+</span><span>    </span><span style="color:#bf616a;">outlineController</span><span>.</span><span style="color:#bf616a;">Hide</span><span>();
+</span><span>}
+</span></code></pre>
+<p>Recuerda asignar la cámara y el prefab del contorno desde el inspector.</p>
+<hr />
+<h2 id="resultado-final-y-sugerencias"><a class="zola-anchor" href="#resultado-final-y-sugerencias" aria-label="Anchor link for: resultado-final-y-sugerencias">Resultado final y sugerencias</a></h2>
+<p>Al pulsar <strong>Play</strong>, tendrás:</p>
+<ul>
+<li>Una cuadrícula hexagonal procedural</li>
+<li>Cada tile con color generado por sus valores naturales</li>
+<li>Un contorno suave que sigue el ratón en tiempo real</li>
+</ul>
+<h3 id="ideas-para-continuar"><a class="zola-anchor" href="#ideas-para-continuar" aria-label="Anchor link for: ideas-para-continuar">Ideas para continuar:</a></h3>
+<ul>
+<li>Añadir <strong>nombres de biomas</strong> según combinaciones de valores (ej. altura &gt; 0.8 y humedad &gt; 0.6 → "Bosque húmedo")</li>
+<li>Agregar una UI flotante que muestre los valores al pasar el ratón</li>
+<li>Usar shaders o materiales avanzados para texturas</li>
+</ul>
+<hr />
+<p>¿Quieres aprender cómo pasar de estos valores a biomas y decoraciones visuales? ¡Pronto publicaremos una guía sobre generación de biomas y tilesets dinámicos!</p>
+<p>¡Feliz desarrollo procedural! 🎲🌍</p>
+
+    </div>
+</article>
+
+    
+<div class="border"></div>
+<script src="https://giscus.app/client.js"
+        data-repo="sh4ka/programando-con-unity"
+        data-repo-id="R_kgDOO1aSxA"
+        data-category="General"
+        data-category-id="DIC_kwDOO1aSxM4CrExF"
+        data-mapping="pathname"
+        data-strict="1"
+        data-reactions-enabled="1"
+        data-emit-metadata="0"
+        data-input-position="bottom"
+        data-theme="preferred_color_scheme"
+        data-lang="es"
+        data-loading="lazy"
+        crossorigin="anonymous"
+        async>
+</script>
+</main>
+
+  
+  <footer>
+    
+    <div class="border"></div>
+    <div class="footer">
+      <small class="footer-left">
+        Copyright &copy; Jesús Flores
+      </small>
+      <small class="footer-right">
+        Powered by <a href="https://www.getzola.org">Zola</a> | Theme <a href="https://github.com/barlog-m/oceanic-zen">Oceanic Zen</a>
+      </small>
+    </div>
+    
+  </footer>
+  
+</div>
+</body>
+</html>
